@@ -7,23 +7,13 @@ namespace FishsGrandAdventure.Game;
 public static class EventManager
 {
     /// <summary>
-    /// Sets up the SeaWorld event on the local client.
-    /// </summary>
-    public static void SetupSeaWorld()
-    {
-        SelectableLevel level = Object.Instantiate(RoundManager.Instance.currentLevel);
-
-        level.overrideWeather = true;
-        level.overrideWeatherType = LevelWeatherType.Flooded;
-        level.currentWeather = LevelWeatherType.Flooded;
-    }
-
-    /// <summary>
     /// Sets up level data on the local client.
     /// </summary>
     /// <param name="level"></param>
-    public static void SetupLevelData(SelectableLevel level)
+    public static void SetupLevelDataClient(SelectableLevel level)
     {
+        GameState.ForceLoadLevel = level;
+
         StartOfRound.Instance.currentLevel = level;
         StartOfRound.Instance.currentLevelID = level.levelID;
         StartOfRound.Instance.SetMapScreenInfoToCurrentLevel();
@@ -32,23 +22,21 @@ public static class EventManager
     /// <summary>
     /// Sets up the SeaWorld event on the local client.
     /// </summary>
-    public static void SetWeather(LevelWeatherType weatherType)
+    public static void SetWeatherClient(LevelWeatherType weatherType)
     {
         SelectableLevel level = RoundManager.Instance.currentLevel;
 
-        level.overrideWeather = true;
-        level.overrideWeatherType = weatherType;
         level.currentWeather = weatherType;
+
+        GameState.ForceLoadLevel = level;
     }
 
-    public static void SetPlayerMovementSpeed(float newSpeed)
+    public static void SetPlayerMovementSpeedClient(float newSpeed)
     {
-        Plugin.Log.LogInfo("PREVIOUS SPEED: " + GameNetworkManager.Instance.localPlayerController.movementSpeed);
-
-        StartOfRound.Instance.localPlayerController.movementSpeed = newSpeed;
+        GameState.ForcePlayerMovementSpeed = newSpeed;
     }
 
-    public static void SetupBlazed()
+    public static void SetupBlazedClient()
     {
         PlayerControllerB localPlayer = StartOfRound.Instance.localPlayerController;
         PlayerEffectBlazed effect = localPlayer.gameObject.AddComponent<PlayerEffectBlazed>();
@@ -56,12 +44,8 @@ public static class EventManager
         effect.PlayerController = localPlayer;
     }
 
-    public static void SetupHelium()
+    public static void SpawnExplosionClient(Vector3 position)
     {
-        foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts)
-        {
-            PlayerEffectHelium effect = player.gameObject.AddComponent<PlayerEffectHelium>();
-            effect.PlayerController = player;
-        }
+        Landmine.SpawnExplosion(position, true, 1f, 4f);
     }
 }

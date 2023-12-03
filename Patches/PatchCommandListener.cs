@@ -5,6 +5,7 @@ using GameNetcodeStuff;
 using HarmonyLib;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using Object = UnityEngine.Object;
 
 namespace FishsGrandAdventure.Patches;
 
@@ -62,7 +63,7 @@ internal class PatchCommandListener
         {
             case "!help":
             {
-                SendChatMessage("Available commands: !help, !ping, !restart, !setEvent, !events");
+                SendChatMessage("Available commands: !help, !ping, !restart, !setEvent, !events, !setcredits");
                 return;
             }
 
@@ -123,7 +124,6 @@ internal class PatchCommandListener
 
                 if (Enum.TryParse(args[0], true, out GameEvent @event))
                 {
-                    GameState.ShouldForceLoadEvent = true;
                     GameState.ForceLoadEvent = @event;
 
                     HUDManager.Instance.AddTextToChatOnServer($"Forcing event {@event.ToString()} to load!");
@@ -141,6 +141,32 @@ internal class PatchCommandListener
                 }
 
                 SendChatMessage(string.Join(", ", Enum.GetNames(typeof(GameEvent))));
+                return;
+            }
+
+            case "!setcredits":
+            {
+                if (!GameNetworkManager.Instance.isHostingGame)
+                {
+                    SendChatMessage("Only the host can set credits.");
+                    return;
+                }
+
+                if (args.Length == 0)
+                {
+                    SendChatMessage("You need to specify the credit amount to set!");
+                    return;
+                }
+
+                if (int.TryParse(args[0], out int val))
+                {
+                    Terminal terminal3 = Object.FindObjectOfType<Terminal>();
+                    terminal3.groupCredits = val;
+                    terminal3.SyncGroupCreditsServerRpc(terminal3.groupCredits, terminal3.numberOfItemsInDropship);
+
+                    HUDManager.Instance.AddTextToChatOnServer($"Setting credits to {val}!");
+                }
+
                 return;
             }
         }

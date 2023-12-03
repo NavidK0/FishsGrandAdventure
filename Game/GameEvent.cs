@@ -18,8 +18,6 @@ public enum GameEvent
 
     Chaos,
 
-    SethsFridge,
-
     Delivery,
 
     ReplaceItems,
@@ -34,21 +32,21 @@ public enum GameEvent
 
     // Navid's Insane Wacky Tacky Events!!! OMG
 
+    SethsFridge,
+
     NiceDay,
 
     HorribleDay,
-
-    BlazeIt420,
 
     LongDay,
 
     ShortDay,
 
+    BlazeIt420,
+
     SeaWorld,
 
     Speedrun,
 
-    ClownWorld,
-
-    Helium,
+    ClownWorld
 }

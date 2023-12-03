@@ -8,28 +8,22 @@ namespace FishsGrandAdventure.Network;
 /// </summary>
 public static class EventSyncer
 {
-    private const string SeaWorldSyncSignature = "NavidK0.SeaWorld.Sync";
     private const string GameEventSyncSignature = "NavidK0.GameEvent.Sync";
-    private const string PlayersBlazedSync = "NavidK0.PlayersBlaze.Sync";
-    private const string PlayersHeliumSync = "NavidK0.PlayersHelium.Sync";
+    private const string PlayersBlazedSignature = "NavidK0.PlayersBlaze.Sync";
 
     private const string SetLevelDataSignature = "NavidK0.SetLevelData.Sync";
     private const string SetWeatherSyncSignature = "NavidK0.SetWeather.Sync";
-    private const string SetPlayerMovementSpeed = "NavidK0.SetPlayerMovementSpeed.Sync";
+    private const string SetPlayerMovementSpeedSignature = "NavidK0.SetPlayerMovementSpeed.Sync";
+
+    private const string SpawnExplosionSignature = "NavidK0.SpawnExplosion.Sync";
 
     static EventSyncer()
     {
         LC_API.ServerAPI.Networking.GetInt += GetInt;
         LC_API.ServerAPI.Networking.GetFloat += GetFloat;
         LC_API.ServerAPI.Networking.GetString += GetString;
-    }
-
-    /// <summary>
-    /// Broadcasts the SeaWorld event.
-    /// </summary>
-    public static void SeaWorldSyncAll()
-    {
-        LC_API.ServerAPI.Networking.Broadcast(0, SeaWorldSyncSignature);
+        LC_API.ServerAPI.Networking.GetVector3 += GetVector3;
+        
     }
 
     /// <summary>
@@ -57,26 +51,21 @@ public static class EventSyncer
 
     public static void SetPlayerMovementSpeedSyncAll(float newSpeed)
     {
-        LC_API.ServerAPI.Networking.Broadcast(newSpeed, SetPlayerMovementSpeed);
+        LC_API.ServerAPI.Networking.Broadcast(newSpeed, SetPlayerMovementSpeedSignature);
     }
-    
+
     public static void PlayersBlazedSyncAll()
     {
-        LC_API.ServerAPI.Networking.Broadcast(0, PlayersBlazedSync);
+        LC_API.ServerAPI.Networking.Broadcast(0, PlayersBlazedSignature);
     }
-    
-    public static void PlayersHeliumSyncAll()
+
+    public static void SpawnExplosionSyncAll(Vector3 position)
     {
-        LC_API.ServerAPI.Networking.Broadcast(0, PlayersHeliumSync);
+        LC_API.ServerAPI.Networking.Broadcast(position, SpawnExplosionSignature);
     }
 
     private static void GetInt(int data, string signature)
     {
-        if (signature == SeaWorldSyncSignature)
-        {
-            EventManager.SetupSeaWorld();
-        }
-
         if (signature == GameEventSyncSignature)
         {
             GameState.CurrentEvent = (GameEvent)data;
@@ -84,25 +73,20 @@ public static class EventSyncer
 
         if (signature == SetWeatherSyncSignature)
         {
-            EventManager.SetWeather((LevelWeatherType)data);
+            EventManager.SetWeatherClient((LevelWeatherType)data);
         }
-        
-        if (signature == PlayersBlazedSync)
+
+        if (signature == PlayersBlazedSignature)
         {
-            EventManager.SetupBlazed();
-        }
-        
-        if (signature == PlayersHeliumSync)
-        {
-            EventManager.SetupHelium();
+            EventManager.SetupBlazedClient();
         }
     }
 
     private static void GetFloat(float data, string signature)
     {
-        if (signature == SetPlayerMovementSpeed)
+        if (signature == SetPlayerMovementSpeedSignature)
         {
-            EventManager.SetPlayerMovementSpeed(data);
+            EventManager.SetPlayerMovementSpeedClient(data);
         }
     }
 
@@ -111,7 +95,15 @@ public static class EventSyncer
         if (signature == SetLevelDataSignature)
         {
             SelectableLevel selectableLevel = JsonUtility.FromJson<SelectableLevel>(data);
-            EventManager.SetupLevelData(selectableLevel);
+            EventManager.SetupLevelDataClient(selectableLevel);
+        }
+    }
+
+    private static void GetVector3(Vector3 data, string signature)
+    {
+        if (signature == SpawnExplosionSignature)
+        {
+            EventManager.SpawnExplosionClient(data);
         }
     }
 }

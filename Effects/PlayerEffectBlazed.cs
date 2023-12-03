@@ -5,7 +5,13 @@ namespace FishsGrandAdventure.Effects;
 
 public class PlayerEffectBlazed : MonoBehaviour
 {
+    private const float CooldownTime = 10f;
+
     public PlayerControllerB PlayerController;
+
+    private float cooldown;
+
+    private float fuelValue = 1f;
 
     private void Start()
     {
@@ -20,7 +26,32 @@ public class PlayerEffectBlazed : MonoBehaviour
 
     private void LateUpdate()
     {
-        PlayerController.drunknessInertia = 0f;
-        PlayerController.drunkness = 4f;
+        if (PlayerController.drunkness > 0f)
+        {
+            return;
+        }
+
+        if (cooldown > 0f)
+        {
+            cooldown -= Time.deltaTime;
+            return;
+        }
+
+        if (fuelValue > 0f)
+        {
+            PlayerController.drunknessInertia =
+                Mathf.Clamp(
+                    PlayerController.drunknessInertia +
+                    Time.deltaTime / 1.75f * PlayerController.drunknessSpeed, 0.1f, 3f);
+            PlayerController.increasingDrunknessThisFrame = true;
+
+            fuelValue -= Time.deltaTime / 22f;
+        }
+
+        if (cooldown <= 0f && fuelValue <= 0f)
+        {
+            cooldown = CooldownTime;
+            fuelValue = 1f;
+        }
     }
 }

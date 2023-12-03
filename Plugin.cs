@@ -8,6 +8,7 @@ using FishsGrandAdventure.Effects;
 using FishsGrandAdventure.Game;
 using FishsGrandAdventure.Network;
 using FishsGrandAdventure.Patches;
+using GameNetcodeStuff;
 using HarmonyLib;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -24,6 +25,8 @@ namespace FishsGrandAdventure
 
         private readonly Harmony harmony = new Harmony("FishsGrandAdventure");
 
+        private static readonly List<SelectableLevel> LevelsModified = new List<SelectableLevel>();
+
         private static Dictionary<SelectableLevel, float> levelHeatVal;
         private static Dictionary<SelectableLevel, List<SpawnableEnemyWithRarity>> levelEnemySpawns;
         private static Dictionary<SpawnableEnemyWithRarity, int> enemyRarities;
@@ -31,16 +34,14 @@ namespace FishsGrandAdventure
 
         private static bool loaded;
 
-        private static readonly List<SelectableLevel> LevelsModified = new List<SelectableLevel>();
-
         private void Awake()
         {
             Log = Logger;
 
             harmony.PatchAll(typeof(Plugin));
-            harmony.PatchAll(typeof(PatchQuotaAdjustments));
             harmony.PatchAll(typeof(PatchCommandListener));
             harmony.PatchAll(typeof(PatchClownWorld));
+            harmony.PatchAll(typeof(PatchPlayerControllerB));
 
             levelHeatVal = new Dictionary<SelectableLevel, float>();
             enemyRarities = new Dictionary<SpawnableEnemyWithRarity, int>();
@@ -72,10 +73,10 @@ namespace FishsGrandAdventure
             if (!RoundManager.Instance.IsHost)
                 return;
 
-            if (GameState.ShouldForceLoadEvent)
+            if (GameState.ForceLoadEvent != null)
             {
-                GameState.CurrentEvent = GameState.ForceLoadEvent;
-                GameState.ShouldForceLoadEvent = false;
+                GameState.CurrentEvent = GameState.ForceLoadEvent.Value;
+                GameState.ForceLoadEvent = null;
             }
             else
             {
@@ -94,16 +95,9 @@ namespace FishsGrandAdventure
                 case GameEvent.SethsFridge:
                 {
                     SelectableLevel rendLevel =
-                        Instantiate(StartOfRound.Instance.levels.FirstOrDefault(l => l.PlanetName.Contains("Rend")));
+                        StartOfRound.Instance.levels.FirstOrDefault(l => l.PlanetName.Contains("Rend"));
 
-                    rendLevel.LevelDescription =
-                        "Welcome to the best luxury vacation planet in existence!\n" +
-                        "Come in and enjoy the sights and sounds inside one of the most luxurious resorts ever built by mankind.\n" +
-                        "You're sure to have a great time!\n";
-
-                    rendLevel.PlanetName = "Seth's Fridge";
-
-                    EventManager.SetupLevelData(rendLevel);
+                    EventManager.SetupLevelDataClient(rendLevel);
                     EventSyncer.SetLevelDataSyncAll(rendLevel);
 
                     break;
@@ -111,8 +105,8 @@ namespace FishsGrandAdventure
 
                 case GameEvent.SeaWorld:
                 {
-                    EventManager.SetupSeaWorld();
-                    EventSyncer.SeaWorldSyncAll();
+                    EventManager.SetWeatherClient(LevelWeatherType.Flooded);
+                    EventSyncer.SetWeatherSyncAll(LevelWeatherType.Flooded);
 
                     break;
                 }
@@ -122,7 +116,7 @@ namespace FishsGrandAdventure
                     SelectableLevel currentLevel = Instantiate(StartOfRound.Instance.currentLevel);
                     currentLevel.DaySpeedMultiplier = 2f;
 
-                    EventManager.SetupLevelData(currentLevel);
+                    EventManager.SetupLevelDataClient(currentLevel);
                     EventSyncer.SetLevelDataSyncAll(currentLevel);
 
                     break;
@@ -133,7 +127,7 @@ namespace FishsGrandAdventure
                     SelectableLevel currentLevel = Instantiate(StartOfRound.Instance.currentLevel);
                     currentLevel.DaySpeedMultiplier = 0.5f;
 
-                    EventManager.SetupLevelData(currentLevel);
+                    EventManager.SetupLevelDataClient(currentLevel);
                     EventSyncer.SetLevelDataSyncAll(currentLevel);
 
                     break;
@@ -144,7 +138,7 @@ namespace FishsGrandAdventure
                     SelectableLevel currentLevel = Instantiate(StartOfRound.Instance.currentLevel);
                     currentLevel.DaySpeedMultiplier = 1.45f;
 
-                    EventManager.SetupLevelData(currentLevel);
+                    EventManager.SetupLevelDataClient(currentLevel);
                     EventSyncer.SetLevelDataSyncAll(currentLevel);
 
                     break;
@@ -246,7 +240,7 @@ namespace FishsGrandAdventure
                 case GameEvent.NiceDay:
                     HUDManager.Instance.AddTextToChatOnServer("<color=green>Level event: Have a Nice Day! :)</color>");
 
-                    EventManager.SetWeather(LevelWeatherType.None);
+                    EventManager.SetWeatherClient(LevelWeatherType.None);
                     EventSyncer.SetWeatherSyncAll(LevelWeatherType.None);
 
                     break;
@@ -255,7 +249,7 @@ namespace FishsGrandAdventure
                     HUDManager.Instance.AddTextToChatOnServer(
                         "<color=red>Level event: What a Horrible Night to Have a Curse</color>");
 
-                    EventManager.SetWeather(LevelWeatherType.Eclipsed);
+                    EventManager.SetWeatherClient(LevelWeatherType.Eclipsed);
                     EventSyncer.SetWeatherSyncAll(LevelWeatherType.Eclipsed);
 
                     break;
@@ -269,14 +263,7 @@ namespace FishsGrandAdventure
                         "<color=red>Level event: Free luxury vacation to Seth's Fridge!</color>"
                     );
 
-                    rendLevel.LevelDescription =
-                        "Welcome to the best luxury vacation planet in existence!\n" +
-                        "Come in and enjoy the sights and sounds inside one of the most luxurious resorts ever built by mankind.\n" +
-                        "You're sure to have a great time!\n";
-
-                    rendLevel.PlanetName = "Seth's Fridge";
-
-                    EventManager.SetupLevelData(rendLevel);
+                    EventManager.SetupLevelDataClient(rendLevel);
                     EventSyncer.SetLevelDataSyncAll(rendLevel);
 
                     break;
@@ -296,10 +283,11 @@ namespace FishsGrandAdventure
                     break;
                 }
 
+
                 case GameEvent.SeaWorld:
                 {
                     HUDManager.Instance.AddTextToChatOnServer(
-                        "<color=#14FCE7>Level event: Welcome to Seaworld!</color>"
+                        "<color=#14FCE7>Level event: Welcome to SeaWorld!</color>"
                     );
 
                     // Replace all items with fish
@@ -337,10 +325,11 @@ namespace FishsGrandAdventure
 
                 case GameEvent.Speedrun:
                 {
-                    HUDManager.Instance.AddTextToChatOnServer("<color=red>Level event: It's Speedrun Time!</color>");
+                    HUDManager.Instance.AddTextToChatOnServer(
+                        "<color=red>Level event: It's Speedrunning Time!</color>");
 
-                    EventManager.SetPlayerMovementSpeed(7f);
-                    EventSyncer.SetPlayerMovementSpeedSyncAll(7f);
+                    EventManager.SetPlayerMovementSpeedClient(8f);
+                    EventSyncer.SetPlayerMovementSpeedSyncAll(8f);
 
                     break;
                 }
@@ -368,7 +357,7 @@ namespace FishsGrandAdventure
                     break;
 
                 case GameEvent.Bullshit:
-                    HUDManager.Instance.AddTextToChatOnServer("<color=red>Level event: Bullshit Company</color>");
+                    HUDManager.Instance.AddTextToChatOnServer("<color=red>Level event: That's BULLSHIT</color>");
                     break;
 
                 case GameEvent.SnareFleas:
@@ -435,18 +424,8 @@ namespace FishsGrandAdventure
                 {
                     HUDManager.Instance.AddTextToChatOnServer("<color=green>Level event: 420 Blaze It</color>");
 
-                    EventManager.SetupBlazed();
+                    EventManager.SetupBlazedClient();
                     EventSyncer.PlayersBlazedSyncAll();
-
-                    break;
-                }
-
-                case GameEvent.Helium:
-                {
-                    HUDManager.Instance.AddTextToChatOnServer("<color=green>Level event: Helium</color>");
-
-                    EventManager.SetupHelium();
-                    EventSyncer.PlayersHeliumSyncAll();
 
                     break;
                 }
@@ -695,11 +674,33 @@ namespace FishsGrandAdventure
             return true;
         }
 
+        [HarmonyPatch(typeof(RoundManager), "FinishGeneratingLevel")]
+        [HarmonyPrefix]
+        private static void OnFinishGeneratingLevel()
+        {
+            if (GameState.ForceLoadLevel == null)
+                return;
+
+            SelectableLevel currentLevel = StartOfRound.Instance.currentLevel;
+
+            RoundManager.Instance.currentLevel = GameState.ForceLoadLevel;
+            RoundManager.Instance.currentLevel.currentWeather = currentLevel.currentWeather;
+
+            GameState.ForceLoadLevel = null;
+        }
+
         private static void ResetEvents()
         {
+            GameState.ForcePlayerMovementSpeed = null;
+            GameState.ForceLoadLevel = null;
+
             // Reset player movement speed
-            EventManager.SetPlayerMovementSpeed(DefaultMovementSpeed);
-            EventSyncer.SetPlayerMovementSpeedSyncAll(DefaultMovementSpeed);
+            foreach (PlayerControllerB player in StartOfRound.Instance.allPlayerScripts)
+            {
+                player.movementSpeed = DefaultMovementSpeed;
+            }
+
+            GameNetworkManager.Instance.localPlayerController.movementSpeed = DefaultMovementSpeed;
 
             // Remove effect components
             foreach (PlayerEffectBlazed effect in FindObjectsOfType<PlayerEffectBlazed>())
@@ -707,10 +708,7 @@ namespace FishsGrandAdventure
                 Destroy(effect);
             }
 
-            foreach (PlayerEffectHelium effect in FindObjectsOfType<PlayerEffectHelium>())
-            {
-                Destroy(effect);
-            }
+            Log.LogInfo("Resetting all events.");
         }
     }
 }
