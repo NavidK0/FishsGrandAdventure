@@ -15,7 +15,7 @@ internal class PatchCommandListener
     [HarmonyPatch(typeof(HUDManager), "SubmitChat_performed")]
     [HarmonyPrefix]
     // ReSharper disable once InconsistentNaming
-    private static bool Prefix(HUDManager __instance, ref InputAction.CallbackContext context)
+    private static bool ListenForCommands(HUDManager __instance, ref InputAction.CallbackContext context)
     {
         if (!context.performed)
         {

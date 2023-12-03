@@ -8,7 +8,6 @@ using FishsGrandAdventure.Effects;
 using FishsGrandAdventure.Game;
 using FishsGrandAdventure.Network;
 using FishsGrandAdventure.Patches;
-using GameNetcodeStuff;
 using HarmonyLib;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -18,7 +17,7 @@ namespace FishsGrandAdventure
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     public class Plugin : BaseUnityPlugin
     {
-        public const float DEFAULT_MOVEMENT_SPEED = 4.6f;
+        public const float DefaultMovementSpeed = 4.6f;
 
         public static ManualLogSource Log;
         public static MethodInfo Chat;
@@ -37,11 +36,11 @@ namespace FishsGrandAdventure
         private void Awake()
         {
             Log = Logger;
-            Log.LogInfo("Loaded Fish's Grand Adventure and applying patches.");
 
             harmony.PatchAll(typeof(Plugin));
             harmony.PatchAll(typeof(PatchQuotaAdjustments));
             harmony.PatchAll(typeof(PatchCommandListener));
+            harmony.PatchAll(typeof(PatchClownWorld));
 
             levelHeatVal = new Dictionary<SelectableLevel, float>();
             enemyRarities = new Dictionary<SpawnableEnemyWithRarity, int>();
@@ -49,7 +48,8 @@ namespace FishsGrandAdventure
             enemyPropCurves = new Dictionary<SpawnableEnemyWithRarity, AnimationCurve>();
 
             Chat = AccessTools.Method(typeof(HUDManager), "AddChatMessage");
-            Log.LogInfo("QuickRestart loaded!");
+
+            Log.LogInfo("Loaded Fish's Grand Adventure!");
         }
 
         public void OnDestroy()
@@ -142,7 +142,7 @@ namespace FishsGrandAdventure
                 case GameEvent.ShortDay:
                 {
                     SelectableLevel currentLevel = Instantiate(StartOfRound.Instance.currentLevel);
-                    currentLevel.DaySpeedMultiplier = 2f;
+                    currentLevel.DaySpeedMultiplier = 1.45f;
 
                     EventManager.SetupLevelData(currentLevel);
                     EventSyncer.SetLevelDataSyncAll(currentLevel);
@@ -317,7 +317,7 @@ namespace FishsGrandAdventure
                 case GameEvent.ClownWorld:
                 {
                     HUDManager.Instance.AddTextToChatOnServer(
-                        "<color=#FC9A14>Level event: No Event</color>"
+                        "<color=#FC9A14>Level event: Clown World</color>"
                     );
 
                     // Replace all items with horns :)
@@ -698,8 +698,8 @@ namespace FishsGrandAdventure
         private static void ResetEvents()
         {
             // Reset player movement speed
-            EventManager.SetPlayerMovementSpeed(DEFAULT_MOVEMENT_SPEED);
-            EventSyncer.SetPlayerMovementSpeedSyncAll(DEFAULT_MOVEMENT_SPEED);
+            EventManager.SetPlayerMovementSpeed(DefaultMovementSpeed);
+            EventSyncer.SetPlayerMovementSpeedSyncAll(DefaultMovementSpeed);
 
             // Remove effect components
             foreach (PlayerEffectBlazed effect in FindObjectsOfType<PlayerEffectBlazed>())
