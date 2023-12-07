@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace FishsGrandAdventure.Effects;
 
-public class PlayerEffectHelium : MonoBehaviour
+public class PlayerEffectHelium : Effect
 {
     public PlayerControllerB PlayerController;
 

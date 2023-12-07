@@ -1,6 +1,6 @@
 ﻿namespace FishsGrandAdventure.Game;
 
-public enum GameEvent
+public enum GameEventType
 {
     None,
 
@@ -20,13 +20,11 @@ public enum GameEvent
 
     Delivery,
 
-    ReplaceItems,
+    WalkieTalkies,
 
     Psychosis,
 
     HeatReset,
-
-    AutomatedTurretDefenseSystem,
 
     All,
 

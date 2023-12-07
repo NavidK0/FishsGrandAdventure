@@ -1,10 +1,12 @@
-﻿namespace FishsGrandAdventure.Game;
+﻿using FishsGrandAdventure.Game.Events;
+
+namespace FishsGrandAdventure.Game;
 
 public static class GameState
 {
-    public static GameEvent CurrentEvent = GameEvent.None;
+    public static GameEventType CurrentGameEventType = GameEventType.None;
+    public static IGameEvent CurrentGameEvent;
 
-    public static SelectableLevel ForceLoadLevel = null;
-    public static GameEvent? ForceLoadEvent = GameEvent.None;
+    public static GameEventType? ForceLoadEvent = GameEventType.None;
     public static float? ForcePlayerMovementSpeed = null;
 }

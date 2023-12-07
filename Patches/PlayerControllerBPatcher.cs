@@ -4,7 +4,7 @@ using HarmonyLib;
 
 namespace FishsGrandAdventure.Patches;
 
-public static class PatchPlayerControllerB
+public static class PlayerControllerBPatcher
 {
     [HarmonyPatch(typeof(PlayerControllerB), "Update")]
     [HarmonyPostfix]

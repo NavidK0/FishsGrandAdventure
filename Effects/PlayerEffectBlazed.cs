@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace FishsGrandAdventure.Effects;
 
-public class PlayerEffectBlazed : MonoBehaviour
+public class PlayerEffectBlazed : Effect
 {
     private const float CooldownTime = 10f;
 

@@ -2,7 +2,7 @@
 
 namespace FishsGrandAdventure.Patches;
 
-internal class PatchQuotaAdjustments
+internal static class QuotaAdjuster
 {
     [HarmonyPatch(typeof(TimeOfDay), "Start")]
     [HarmonyPrefix]

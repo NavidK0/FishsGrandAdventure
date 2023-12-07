@@ -9,7 +9,7 @@ using Object = UnityEngine.Object;
 
 namespace FishsGrandAdventure.Patches;
 
-internal class PatchCommandListener
+internal class CommandListener
 {
     public const string CommandPrefix = "!";
 
@@ -122,11 +122,13 @@ internal class PatchCommandListener
                     return;
                 }
 
-                if (Enum.TryParse(args[0], true, out GameEvent @event))
+                if (Enum.TryParse(args[0], true, out GameEventType @event))
                 {
                     GameState.ForceLoadEvent = @event;
 
                     HUDManager.Instance.AddTextToChatOnServer($"Forcing event {@event.ToString()} to load!");
+
+                    GameEventManager.SetupNewEvent();
                 }
 
                 return;
@@ -140,7 +142,7 @@ internal class PatchCommandListener
                     return;
                 }
 
-                SendChatMessage(string.Join(", ", Enum.GetNames(typeof(GameEvent))));
+                SendChatMessage(string.Join(", ", Enum.GetNames(typeof(GameEventType))));
                 return;
             }
 

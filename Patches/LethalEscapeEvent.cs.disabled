@@ -7,7 +7,7 @@ using Object = UnityEngine.Object;
 namespace FishsGrandAdventure.Patches;
 
 [UsedImplicitly]
-internal class PatchLethalEscapeEvent
+internal class LethalEscapeEvent
 {
     private static float timeStartTeleport;
 
