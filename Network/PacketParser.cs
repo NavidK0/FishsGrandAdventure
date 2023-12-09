@@ -5,20 +5,16 @@ namespace FishsGrandAdventure.Network;
 
 public static class PacketParser
 {
-    public static void Parse(ulong clientId, float receiveTime, string data)
+    public static void Parse(string data)
     {
-        Plugin.Log.LogInfo("Received data: " + data);
         Packet rawPacket = JsonConvert.DeserializeObject<Packet>(data, NetworkUtils.SerializerSettings);
-
-        Plugin.Log.LogInfo($"Received type: {rawPacket.GetType()}");
-        Plugin.Log.LogInfo(
-            $"Received object: {JsonConvert.SerializeObject(rawPacket, NetworkUtils.SerializerSettings)}");
 
         switch (rawPacket)
         {
             case PacketGameEvent packet:
             {
-                GameState.CurrentGameEventType = packet.GameEventType;
+                GameState.CurrentGameEvent =
+                    GameEventManager.EnabledEvents.Find(e => e.GameEventType == packet.GameEventType);
                 break;
             }
             case PacketPlayersBlazed:
@@ -51,9 +47,14 @@ public static class PacketParser
                 ClientHelper.DestroyEffects();
                 break;
             }
-            case PacketResetPlayedSpeed:
+            case PacketResetPlayerSpeed:
             {
                 ClientHelper.ResetPlayerMoveSpeed();
+                break;
+            }
+            case PacketGameTip packet:
+            {
+                HUDManager.Instance.DisplayTip(packet.Header, packet.Body);
                 break;
             }
         }

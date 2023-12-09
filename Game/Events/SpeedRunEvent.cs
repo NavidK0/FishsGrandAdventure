@@ -1,4 +1,5 @@
 ﻿using FishsGrandAdventure.Network;
+using HarmonyLib;
 using UnityEngine;
 
 namespace FishsGrandAdventure.Game.Events;
@@ -7,7 +8,7 @@ public class SpeedRunEvent : IGameEvent
 {
     public string Description => "It's Speedrunning Time!";
     public Color Color => new Color(0.78f, 1f, 0f);
-    public GameEventType GameEventType => GameEventType.Speedrun;
+    public GameEventType GameEventType => GameEventType.SpeedRun;
 
     public void OnServerInitialize(SelectableLevel level)
     {
@@ -35,5 +36,19 @@ public class SpeedRunEvent : IGameEvent
         {
             Multiplier = 1f
         });
+    }
+}
+
+public static class PatchSpeedRun
+{
+    [HarmonyPatch(typeof(EnemyAI), "Start")]
+    [HarmonyPostfix]
+    // ReSharper disable once InconsistentNaming
+    public static void PatchEnemySpeed(EnemyAI __instance)
+    {
+        if (GameState.CurrentGameEventType == GameEventType.SpeedRun)
+        {
+            __instance.agent.speed *= 2f;
+        }
     }
 }

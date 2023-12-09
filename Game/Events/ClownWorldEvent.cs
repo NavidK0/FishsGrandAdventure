@@ -37,11 +37,11 @@ public class ClownWorldEvent : IGameEvent
 
     public void Cleanup()
     {
-        ClownWorld.Clownified = false;
+        PatchClownWorld.Clownified = false;
     }
 }
 
-public static class ClownWorld
+public static class PatchClownWorld
 {
     public static bool Clownified;
 

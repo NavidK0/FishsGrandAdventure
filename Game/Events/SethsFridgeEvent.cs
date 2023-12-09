@@ -21,16 +21,13 @@ public class SethsFridgeEvent : IGameEvent
 
     public void OnBeforeModifyLevel(ref SelectableLevel level)
     {
-        throw new System.NotImplementedException();
     }
 
     public void OnFinishGeneratingLevel()
     {
-        throw new System.NotImplementedException();
     }
 
     public void Cleanup()
     {
-        throw new System.NotImplementedException();
     }
 }

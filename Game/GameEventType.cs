@@ -44,7 +44,9 @@ public enum GameEventType
 
     SeaWorld,
 
-    Speedrun,
+    SpeedRun,
 
-    ClownWorld
+    ClownWorld,
+
+    ClownExpo,
 }

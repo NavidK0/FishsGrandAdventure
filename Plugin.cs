@@ -3,6 +3,7 @@ using BepInEx;
 using BepInEx.Logging;
 using FishsGrandAdventure.Game;
 using FishsGrandAdventure.Game.Events;
+using FishsGrandAdventure.Network;
 using FishsGrandAdventure.Patches;
 using HarmonyLib;
 using UnityEngine;
@@ -31,10 +32,13 @@ public class Plugin : BaseUnityPlugin
         harmony.PatchAll(typeof(GameEventManager));
 
         // Patches
-        harmony.PatchAll(typeof(ClownWorld));
+        harmony.PatchAll(typeof(PatchClownWorld));
+        harmony.PatchAll(typeof(PatchSpeedRun));
         harmony.PatchAll(typeof(CommandListener));
         harmony.PatchAll(typeof(CustomMoonManager));
         harmony.PatchAll(typeof(PlayerControllerBPatcher));
+
+        LC_API.ServerAPI.Networking.GetString += NetworkUtils.OnMessageReceived;
     }
 
     public void OnDestroy()
@@ -44,6 +48,7 @@ public class Plugin : BaseUnityPlugin
             var eventManagerGo = new GameObject("FishsGrandAdventure.GameEventManager");
             eventManagerGo.AddComponent<GameEventManager>();
             DontDestroyOnLoad(eventManagerGo);
+
             Log.LogInfo("Added GameEventManager");
 
             loaded = true;

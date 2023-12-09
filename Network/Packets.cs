@@ -47,11 +47,18 @@ public class PacketGlobalTimeSpeedMultiplier : Packet
 }
 
 [Serializable]
+public class PacketGameTip : Packet
+{
+    public string Header;
+    public string Body;
+}
+
+[Serializable]
 public class PacketDestroyEffects : Packet
 {
 }
 
 [Serializable]
-public class PacketResetPlayedSpeed : Packet
+public class PacketResetPlayerSpeed : Packet
 {
 }

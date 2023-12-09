@@ -5,7 +5,7 @@ namespace FishsGrandAdventure.Effects;
 
 public class PlayerEffectBlazed : Effect
 {
-    private const float CooldownTime = 10f;
+    private const float CooldownTime = 60f;
 
     public PlayerControllerB PlayerController;
 
@@ -26,11 +26,6 @@ public class PlayerEffectBlazed : Effect
 
     private void LateUpdate()
     {
-        if (PlayerController.drunkness > 0f)
-        {
-            return;
-        }
-
         if (cooldown > 0f)
         {
             cooldown -= Time.deltaTime;

@@ -1,15 +1,11 @@
-﻿using System;
-using FishsGrandAdventure.Utils.Converters;
+﻿using FishsGrandAdventure.Utils.Converters;
 using Newtonsoft.Json;
-using Unity.Netcode;
-using UnityEngine;
 
 namespace FishsGrandAdventure.Network;
 
-public class NetworkUtils : MonoBehaviour
+public static class NetworkUtils
 {
-    public static NetworkManager NetworkManager => NetworkManager.Singleton;
-    public static NetworkTransport Transport => NetworkManager.Singleton.NetworkConfig.NetworkTransport;
+    public const string Signature = "FishsGrandAdventure.Packet";
 
     public static readonly JsonSerializerSettings SerializerSettings = new JsonSerializerSettings
     {
@@ -29,77 +25,27 @@ public class NetworkUtils : MonoBehaviour
         }
     };
 
-    private void Awake()
-    {
-        NetworkManager.Singleton
-                .NetworkConfig
-                .NetworkTransport
-                .OnTransportEvent +=
-            TransportEvent;
-    }
-
-    private void OnDestroy()
-    {
-        if (NetworkManager.Singleton != null)
-        {
-            NetworkManager.Singleton
-                    .NetworkConfig
-                    .NetworkTransport
-                    .OnTransportEvent -=
-                TransportEvent;
-        }
-    }
-
     public static void BroadcastAll<T>(T packet) where T : Packet
     {
-        Plugin.Log.LogInfo("Broadcasting data: " + packet.GetType());
+        if (!RoundManager.Instance.IsServer) return;
+
+        if (GameNetworkManager.Instance.localPlayerController == null)
+        {
+            Plugin.Log.LogError("localPlayerController is null!");
+            return;
+        }
 
         string json = JsonConvert.SerializeObject(packet, SerializerSettings);
 
-        Plugin.Log.LogInfo("Broadcasting JSON: " + json);
-
-        Plugin.Log.LogInfo("ClientId: " + NetworkManager.LocalClientId);
-        Plugin.Log.LogInfo("ServerClientId: " + NetworkManager.ServerClientId);
-        Plugin.Log.LogInfo("ConnectedClientsIds: " + NetworkManager.ConnectedClientsIds.Count);
-
-        foreach (ulong id in NetworkManager.ConnectedClientsIds)
-        {
-            Plugin.Log.LogInfo("Sending to client: " + id);
-            Send(id, packet);
-        }
+        PacketParser.Parse(json);
+        LC_API.ServerAPI.Networking.Broadcast(json, Signature);
     }
 
-    public static void Send<T>(ulong clientId, T packet) where T : Packet
+    public static void OnMessageReceived(string data, string signature)
     {
-        string json = JsonConvert.SerializeObject(packet, SerializerSettings);
-        var jsonByteArray = new ArraySegment<byte>(System.Text.Encoding.Default.GetBytes(json));
-
-        if (clientId == NetworkManager.LocalClientId)
+        if (signature == Signature)
         {
-            ParseTransportEvent(NetworkEvent.Data, 0, jsonByteArray, 0);
+            PacketParser.Parse(data);
         }
-        else
-        {
-            Transport.Send(clientId, jsonByteArray, NetworkDelivery.ReliableSequenced);
-        }
-    }
-
-    private static void TransportEvent(NetworkEvent eventType, ulong clientId, ArraySegment<byte> payload,
-        float receiveTime)
-    {
-        ParseTransportEvent(eventType, clientId, payload, receiveTime);
-    }
-
-    private static void ParseTransportEvent(NetworkEvent eventType, ulong clientId, ArraySegment<byte> payload,
-        float receiveTime)
-    {
-        if (eventType != NetworkEvent.Data) return;
-        if (payload.Array == null) return;
-
-        string data = System.Text.Encoding.Default.GetString(payload.Array, payload.Offset, payload.Count);
-
-        Plugin.Log.LogInfo($"Received data: {data}");
-
-        PacketParser.Parse(clientId, receiveTime, data);
     }
 }

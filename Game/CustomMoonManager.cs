@@ -13,6 +13,8 @@ public static class CustomMoonManager
 
     public static SelectableLevel SethsFridgeLevel;
 
+    public static bool Loaded;
+
     [UsedImplicitly]
     public static readonly List<SelectableLevel> OriginalLevels = new List<SelectableLevel>();
 
@@ -21,6 +23,8 @@ public static class CustomMoonManager
     // ReSharper disable once InconsistentNaming
     private static void AddCustomMoonsAwake(StartOfRound __instance)
     {
+        if (Loaded) return;
+
         foreach (SelectableLevel selectableLevel in StartOfRound.Instance.levels)
         {
             OriginalLevels.Add(Object.Instantiate(selectableLevel));
@@ -105,9 +109,6 @@ public static class CustomMoonManager
         };
         CompatibleNoun denyNoun = routeKeyword.compatibleNouns[0].result.terminalOptions[0];
 
-        TerminalNode moonsCatalogue =
-            terminal.terminalNodes.allKeywords.First(k => k.word == "moons").specialKeywordResult;
-
         TerminalKeyword moonKeyword = ScriptableObject.CreateInstance<TerminalKeyword>();
         moonKeyword.name = level.PlanetName;
         moonKeyword.word = keyword;
@@ -115,8 +116,6 @@ public static class CustomMoonManager
 
         terminal.moonsCatalogueList = terminal.moonsCatalogueList.AddToArray(level);
         terminal.terminalNodes.allKeywords = terminal.terminalNodes.allKeywords.AddToArray(moonKeyword);
-
-        moonsCatalogue.displayText += $"* {level.PlanetName} [planetTime]\n";
 
         TerminalNode thanksNode = ScriptableObject.CreateInstance<TerminalNode>();
         thanksNode.name = $"{keyword}-purchased";

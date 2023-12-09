@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using FishsGrandAdventure.Game.Events;
 using FishsGrandAdventure.Network;
 using FishsGrandAdventure.Utils;
 using HarmonyLib;
-using Steamworks;
-using Steamworks.Data;
+using MEC;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
 namespace FishsGrandAdventure.Game;
 
@@ -16,7 +13,7 @@ public class GameEventManager : MonoBehaviour
 {
     public const float DefaultMovementSpeed = 4.6f;
 
-    private static readonly List<IGameEvent> EnabledEvents = new List<IGameEvent>
+    public static readonly List<IGameEvent> EnabledEvents = new List<IGameEvent>
     {
         new NoneEvent(),
         new TurretEvent(),
@@ -40,43 +37,59 @@ public class GameEventManager : MonoBehaviour
         new BlazeIt420Event(),
         new SeaWorldEvent(),
         new SpeedRunEvent(),
-        new ClownWorldEvent()
+        new ClownWorldEvent(),
+        new ClownExpoEvent()
     };
 
     private static readonly Dictionary<SelectableLevel, float> LevelHeatVal = new Dictionary<SelectableLevel, float>();
     private static readonly Dictionary<SelectableLevel, GameEventType> MoonEvents =
         new Dictionary<SelectableLevel, GameEventType>();
 
-    private static Dictionary<SelectableLevel, List<SpawnableEnemyWithRarity>> levelEnemySpawns;
-    private static Dictionary<SpawnableEnemyWithRarity, int> enemyRarities;
-    private static Dictionary<SpawnableEnemyWithRarity, AnimationCurve> enemyPropCurves;
+    private static readonly Dictionary<SelectableLevel, List<SpawnableEnemyWithRarity>> LevelEnemySpawns =
+        new Dictionary<SelectableLevel, List<SpawnableEnemyWithRarity>>();
+
+    private static readonly Dictionary<SpawnableEnemyWithRarity, int> EnemyRarities =
+        new Dictionary<SpawnableEnemyWithRarity, int>();
+
+    private static readonly Dictionary<SpawnableEnemyWithRarity, AnimationCurve> EnemyPropCurves =
+        new Dictionary<SpawnableEnemyWithRarity, AnimationCurve>();
 
     private static Terminal terminal;
+    private static bool initialized;
 
     private static Terminal Terminal => terminal != null ? terminal : terminal = FindObjectOfType<Terminal>();
 
     private void Awake()
     {
-        enemyRarities = new Dictionary<SpawnableEnemyWithRarity, int>();
-        levelEnemySpawns = new Dictionary<SelectableLevel, List<SpawnableEnemyWithRarity>>();
-        enemyPropCurves = new Dictionary<SpawnableEnemyWithRarity, AnimationCurve>();
+        EnemyRarities.Clear();
+        LevelEnemySpawns.Clear();
+        EnemyPropCurves.Clear();
+
+        LevelHeatVal.Clear();
     }
 
     private void OnDestroy()
     {
-        enemyRarities.Clear();
-        levelEnemySpawns.Clear();
-        enemyPropCurves.Clear();
+        EnemyRarities.Clear();
+        LevelEnemySpawns.Clear();
+        EnemyPropCurves.Clear();
 
-        ResetEvents();
+        LevelHeatVal.Clear();
+
+        initialized = false;
     }
 
     [HarmonyPatch(typeof(StartOfRound), "Start")]
     [HarmonyPostfix]
     private static void OnStartOfRoundStart()
     {
-        SetupNewEvent();
-        Plugin.Log.LogInfo("STARTOFROUND: START");
+        EnemyRarities.Clear();
+        LevelEnemySpawns.Clear();
+        EnemyPropCurves.Clear();
+
+        LevelHeatVal.Clear();
+
+        Plugin.Log.LogInfo("Clearing out events on StartOfRound Start method");
     }
 
     [HarmonyPatch(typeof(StartOfRound), "ResetMiscValues")]
@@ -84,38 +97,35 @@ public class GameEventManager : MonoBehaviour
     private static void OnNewRoundStart()
     {
         SetupNewEvent();
-        Plugin.Log.LogInfo("STARTOFROUND: ResetMiscValues");
     }
 
     [HarmonyPatch(typeof(StartOfRound), "ChangeLevel")]
     [HarmonyPostfix]
     private static void OnAfterChangeLevel()
     {
-        SetupNewEvent();
-        Plugin.Log.LogInfo("STARTOFROUND: ChangeLevelClientRpc");
-    }
-
-    [HarmonyPatch(typeof(GameNetworkManager), "SteamMatchmaking_OnLobbyMemberJoined")]
-    [HarmonyPostfix]
-    private static void OnSteamMatchmaking_OnLobbyMemberJoined(Lobby lobby, Friend friend)
-    {
-        if (RoundManager.Instance.IsHost)
+        if (GameNetworkManager.Instance.localPlayerController == null)
         {
-            NetworkUtils.BroadcastAll(new PacketGameEvent
-            {
-                GameEventType = GameState.CurrentGameEventType
-            });
+            return;
         }
 
-        Plugin.Log.LogInfo("STARTOFROUND: SteamMatchmaking_OnLobbyMemberJoined");
+        SetupNewEvent();
+    }
+
+    [HarmonyPatch(typeof(StartOfRound), "OnClientConnect")]
+    [HarmonyPostfix]
+    private static void OnClientConnect(ulong clientId)
+    {
+        if (!RoundManager.Instance.IsServer || GameState.CurrentGameEvent == null) return;
+
+        NetworkUtils.BroadcastAll(new PacketGameEvent
+        {
+            GameEventType = GameState.CurrentGameEventType
+        });
     }
 
     public static void SetupNewEvent()
     {
-        if (GameNetworkManager.Instance.GetComponent<NetworkUtils>() == null)
-        {
-            GameNetworkManager.Instance.gameObject.AddComponent<NetworkUtils>();
-        }
+        initialized = true;
 
         ResetEvents();
 
@@ -124,18 +134,18 @@ public class GameEventManager : MonoBehaviour
 
         if (GameState.ForceLoadEvent != null)
         {
-            GameState.CurrentGameEventType = GameState.ForceLoadEvent.Value;
+            GameState.CurrentGameEvent = EnabledEvents.Find(e => e.GameEventType == GameState.ForceLoadEvent.Value);
             GameState.ForceLoadEvent = null;
         }
         else
         {
-            GameState.CurrentGameEventType =
-                (GameEventType)Random.Range(0, Enum.GetNames(typeof(GameEventType)).Length);
+            GameState.CurrentGameEvent =
+                EnabledEvents.GetRandomElement();
         }
 
         if (StartOfRound.Instance.currentLevel.sceneName == "CompanyBuilding")
         {
-            GameState.CurrentGameEventType = GameEventType.None;
+            GameState.CurrentGameEvent = EnabledEvents.Find(e => e.GameEventType == GameEventType.None);
         }
 
         NetworkUtils.BroadcastAll(new PacketGameEvent
@@ -145,14 +155,10 @@ public class GameEventManager : MonoBehaviour
 
         SelectableLevel newLevel = RoundManager.Instance.currentLevel;
 
-        IGameEvent currentGameEvent = EnabledEvents.Find(e => e.GameEventType == GameState.CurrentGameEventType);
-
         HUDManager.Instance.AddTextToChatOnServer(
-            $"<color=#{currentGameEvent.Color.ToHex()}>Event: {currentGameEvent.Description}</color>");
+            $"<color=#{GameState.CurrentGameEvent.Color.ToHex()}>Event: {GameState.CurrentGameEvent.Description}</color>");
 
-        GameState.CurrentGameEvent = currentGameEvent;
-
-        currentGameEvent.OnServerInitialize(newLevel);
+        GameState.CurrentGameEvent.OnServerInitialize(newLevel);
     }
 
     [HarmonyPatch(typeof(RoundManager), "LoadNewLevel")]
@@ -167,7 +173,7 @@ public class GameEventManager : MonoBehaviour
             LevelHeatVal.Add(newLevel, 0f);
         }
 
-        if (!levelEnemySpawns.ContainsKey(newLevel))
+        if (!LevelEnemySpawns.ContainsKey(newLevel))
         {
             List<SpawnableEnemyWithRarity> list = new List<SpawnableEnemyWithRarity>();
             foreach (SpawnableEnemyWithRarity item in newLevel.Enemies)
@@ -175,10 +181,10 @@ public class GameEventManager : MonoBehaviour
                 list.Add(item);
             }
 
-            levelEnemySpawns.Add(newLevel, list);
+            LevelEnemySpawns.Add(newLevel, list);
         }
 
-        levelEnemySpawns.TryGetValue(newLevel, out List<SpawnableEnemyWithRarity> enemies);
+        LevelEnemySpawns.TryGetValue(newLevel, out List<SpawnableEnemyWithRarity> enemies);
         newLevel.Enemies = enemies;
 
         foreach (SelectableLevel key in LevelHeatVal.Keys.ToList())
@@ -213,24 +219,24 @@ public class GameEventManager : MonoBehaviour
         {
             foreach (SpawnableEnemyWithRarity spawnableEnemyWithRarity in newLevel.Enemies)
             {
-                if (!enemyRarities.ContainsKey(spawnableEnemyWithRarity))
+                if (!EnemyRarities.ContainsKey(spawnableEnemyWithRarity))
                 {
-                    enemyRarities.Add(spawnableEnemyWithRarity, spawnableEnemyWithRarity.rarity);
+                    EnemyRarities.Add(spawnableEnemyWithRarity, spawnableEnemyWithRarity.rarity);
                 }
 
-                enemyRarities.TryGetValue(spawnableEnemyWithRarity, out int rarity);
+                EnemyRarities.TryGetValue(spawnableEnemyWithRarity, out int rarity);
                 spawnableEnemyWithRarity.rarity = rarity;
             }
 
             foreach (SpawnableEnemyWithRarity spawnableEnemyWithRarity2 in newLevel.Enemies)
             {
-                if (!enemyPropCurves.ContainsKey(spawnableEnemyWithRarity2))
+                if (!EnemyPropCurves.ContainsKey(spawnableEnemyWithRarity2))
                 {
-                    enemyPropCurves.Add(spawnableEnemyWithRarity2,
+                    EnemyPropCurves.Add(spawnableEnemyWithRarity2,
                         spawnableEnemyWithRarity2.enemyType.probabilityCurve);
                 }
 
-                enemyPropCurves.TryGetValue(spawnableEnemyWithRarity2, out AnimationCurve probabilityCurve);
+                EnemyPropCurves.TryGetValue(spawnableEnemyWithRarity2, out AnimationCurve probabilityCurve);
                 spawnableEnemyWithRarity2.enemyType.probabilityCurve = probabilityCurve;
             }
         }
@@ -254,6 +260,15 @@ public class GameEventManager : MonoBehaviour
     private static void OnFinishGeneratingLevel()
     {
         GameState.CurrentGameEvent.OnFinishGeneratingLevel();
+
+        if (RoundManager.Instance.IsServer)
+        {
+            NetworkUtils.BroadcastAll(new PacketGameTip
+            {
+                Header = "World Event",
+                Body = GameState.CurrentGameEvent.Description
+            });
+        }
     }
 
     private static void AddBaseModifiers(SelectableLevel selectableLevel, float heatLevel)
@@ -296,7 +311,6 @@ public class GameEventManager : MonoBehaviour
         {
             Plugin.Log.LogInfo(spawnableEnemyWithRarity15.enemyType.enemyName);
         }
-
 
         selectableLevel.maxScrap += 45;
         selectableLevel.maxTotalScrapValue += 800;
@@ -350,7 +364,9 @@ public class GameEventManager : MonoBehaviour
 
     private static void ResetEvents()
     {
-        NetworkUtils.BroadcastAll(new PacketResetPlayedSpeed());
+        if (!RoundManager.Instance.IsServer || !initialized) return;
+
+        NetworkUtils.BroadcastAll(new PacketResetPlayerSpeed());
         NetworkUtils.BroadcastAll(new PacketDestroyEffects());
 
         if (GameState.CurrentGameEvent != null)
@@ -358,5 +374,7 @@ public class GameEventManager : MonoBehaviour
             GameState.CurrentGameEvent.Cleanup();
             GameState.CurrentGameEvent = null;
         }
+
+        StartOfRound.Instance.RefreshPlayerVoicePlaybackObjects();
     }
 }

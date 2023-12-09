@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Linq;
 using FishsGrandAdventure.Game;
+using FishsGrandAdventure.Network;
 using GameNetcodeStuff;
 using HarmonyLib;
+using Microsoft.SqlServer.Server;
+using Newtonsoft.Json;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using Object = UnityEngine.Object;
@@ -136,12 +139,6 @@ internal class CommandListener
 
             case "!events":
             {
-                if (!GameNetworkManager.Instance.isHostingGame)
-                {
-                    SendChatMessage("Only the host can see events.");
-                    return;
-                }
-
                 SendChatMessage(string.Join(", ", Enum.GetNames(typeof(GameEventType))));
                 return;
             }
@@ -169,6 +166,20 @@ internal class CommandListener
                     HUDManager.Instance.AddTextToChatOnServer($"Setting credits to {val}!");
                 }
 
+                return;
+            }
+
+            case "!debug":
+            {
+                SelectableLevel level = RoundManager.Instance.currentLevel;
+
+                Plugin.Log.LogError($"Level Debug: {JsonConvert.SerializeObject(level,
+                    new JsonSerializerSettings(NetworkUtils.SerializerSettings)
+                    {
+                        Formatting = Formatting.Indented
+                    })}");
+
+                SendChatMessage("Check the logs for a detailed debug message!");
                 return;
             }
         }
