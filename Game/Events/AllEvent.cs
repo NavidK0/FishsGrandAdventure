@@ -23,14 +23,15 @@ public class AllEvent : IGameEvent
         foreach (SpawnableEnemyWithRarity spawnableEnemyWithRarity9 in level.Enemies)
         {
             spawnableEnemyWithRarity9.rarity = 0;
+
             if (spawnableEnemyWithRarity9.enemyType.enemyPrefab.GetComponent<FlowermanAI>() != null)
             {
-                spawnableEnemyWithRarity9.rarity = 999;
+                spawnableEnemyWithRarity9.rarity = 100;
             }
 
             if (spawnableEnemyWithRarity9.enemyType.enemyPrefab.GetComponent<SpringManAI>() != null)
             {
-                spawnableEnemyWithRarity9.rarity = 999;
+                spawnableEnemyWithRarity9.rarity = 100;
             }
         }
 
@@ -38,7 +39,7 @@ public class AllEvent : IGameEvent
         {
             if (spawnableEnemyWithRarity10.enemyType.enemyPrefab.GetComponent<CentipedeAI>() != null)
             {
-                spawnableEnemyWithRarity10.rarity = 999;
+                spawnableEnemyWithRarity10.rarity = 100;
             }
         }
 
@@ -46,7 +47,7 @@ public class AllEvent : IGameEvent
         {
             if (spawnableEnemyWithRarity11.enemyType.enemyPrefab.GetComponent<LassoManAI>() != null)
             {
-                spawnableEnemyWithRarity11.rarity = 999;
+                spawnableEnemyWithRarity11.rarity = 100;
             }
         }
 
@@ -54,7 +55,7 @@ public class AllEvent : IGameEvent
         {
             if (spawnableEnemyWithRarity12.enemyType.enemyPrefab.GetComponent<HoarderBugAI>() != null)
             {
-                spawnableEnemyWithRarity12.rarity = 999;
+                spawnableEnemyWithRarity12.rarity = 100;
             }
         }
 
@@ -62,7 +63,7 @@ public class AllEvent : IGameEvent
         {
             if (spawnableEnemyWithRarity13.enemyType.enemyPrefab.GetComponent<DressGirlAI>() != null)
             {
-                spawnableEnemyWithRarity13.rarity = 9999;
+                spawnableEnemyWithRarity13.rarity = 1000;
             }
         }
 

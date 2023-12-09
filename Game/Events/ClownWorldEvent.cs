@@ -1,7 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using FishsGrandAdventure.Network;
 using GameNetcodeStuff;
 using HarmonyLib;
+using MEC;
 using UnityEngine;
 
 namespace FishsGrandAdventure.Game.Events;
@@ -24,8 +26,8 @@ public class ClownWorldEvent : IGameEvent
             spawnableItemWithRarity.rarity =
                 spawnableItemWithRarity.spawnableItem.itemName.ToLower() switch
                 {
-                    "clown horn" => 999,
-                    "airhorn" => 999,
+                    "clown horn" => 100,
+                    "airhorn" => 100,
                     _ => 0
                 };
         }
@@ -69,20 +71,20 @@ public static class PatchClownWorld
                     $"{playerControllerB.playerUsername} is a clown! The world is now clownified!");
             }
 
-            _ = SpawnLightning(playerControllerB);
+            Timing.RunCoroutine(SpawnLightning((playerControllerB)));
         }
 
         if (isAirHorn)
         {
-            _ = SpawnExplosion(playerControllerB);
+            Timing.RunCoroutine(SpawnExplosion(playerControllerB));
         }
     }
 
-    private static async Task SpawnLightning(PlayerControllerB playerControllerB)
+    private static IEnumerator<float> SpawnLightning(PlayerControllerB playerControllerB)
     {
         Vector3 transformPosition = playerControllerB.transform.position;
 
-        await Task.Delay(1500);
+        yield return Timing.WaitForSeconds(1.5f);
 
         NetworkUtils.BroadcastAll(new PacketStrikeLightning
         {
@@ -90,11 +92,11 @@ public static class PatchClownWorld
         });
     }
 
-    private static async Task SpawnExplosion(PlayerControllerB playerControllerB)
+    private static IEnumerator<float> SpawnExplosion(PlayerControllerB playerControllerB)
     {
         Vector3 transformPosition = playerControllerB.transform.position;
 
-        await Task.Delay(2000);
+        yield return Timing.WaitForSeconds(2f);
 
         NetworkUtils.BroadcastAll(new PacketSpawnExplosion
         {

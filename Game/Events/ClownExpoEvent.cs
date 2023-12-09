@@ -1,7 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using FishsGrandAdventure.Network;
 using FishsGrandAdventure.Utils;
+using GameNetcodeStuff;
+using HarmonyLib;
+using MEC;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace FishsGrandAdventure.Game.Events;
 
@@ -11,45 +16,33 @@ public class ClownExpoEvent : IGameEvent
     public Color Color => new Color32(252, 10, 0, 255);
     public GameEventType GameEventType => GameEventType.ClownExpo;
 
-    private bool forcefullyAddedJesterToLevel;
-
     public void OnServerInitialize(SelectableLevel level)
     {
     }
 
     public void OnBeforeModifyLevel(ref SelectableLevel level)
     {
-        // Replace all items with horns :)
+        ModUtils.AddSpecificItemsForEvent(level, new List<string> { "cash register" });
+        ModUtils.AddSpecificEnemiesForEvent(level, new List<Type> { typeof(JesterAI) });
+
+        // Replace all items with cash registers :)
         foreach (SpawnableItemWithRarity spawnableItemWithRarity in level.spawnableScrap)
         {
             spawnableItemWithRarity.rarity =
                 spawnableItemWithRarity.spawnableItem.itemName.ToLower() switch
                 {
-                    "cash register" => 999,
+                    "cash register" => 100,
+                    "clown horn" => 100,
+                    "airhorn" => 100,
                     _ => 0
                 };
         }
 
-        var hasJester = false;
-
         foreach (SpawnableEnemyWithRarity spawnableEnemyWithRarity in level.Enemies)
         {
-            JesterAI jesterAI =
+            JesterAI jesterAi =
                 spawnableEnemyWithRarity.enemyType.enemyPrefab.GetComponent<JesterAI>();
-
-            if (jesterAI != null)
-            {
-                hasJester = true;
-                spawnableEnemyWithRarity.rarity = jesterAI != null ? 9999 : 0;
-            }
-        }
-
-        if (!hasJester)
-        {
-            SpawnableEnemyWithRarity jesterEnemy = ModUtils.FindSpawnableEnemy<JesterAI>();
-            jesterEnemy.rarity = 9999;
-            level.Enemies.Add(jesterEnemy);
-            forcefullyAddedJesterToLevel = true;
+            spawnableEnemyWithRarity.rarity = jesterAi != null ? 100 : 0;
         }
     }
 
@@ -59,11 +52,72 @@ public class ClownExpoEvent : IGameEvent
 
     public void Cleanup()
     {
-        if (forcefullyAddedJesterToLevel)
+    }
+}
+
+public static class PatchClownExpo
+{
+    public static bool InvokedJesters;
+
+    [HarmonyPatch(typeof(GrabbableObject), "ActivateItemServerRpc")]
+    [HarmonyPostfix]
+    // ReSharper disable once InconsistentNaming
+    private static void OnActivateItemServerRpc(GrabbableObject __instance, bool onOff, bool buttonDown)
+    {
+        if (GameState.CurrentGameEventType != GameEventType.ClownWorld) return;
+        if (!buttonDown) return;
+
+        bool isClownHorn = __instance.itemProperties.itemName.ToLower().Contains("clown horn");
+        bool isAirHorn = __instance.itemProperties.itemName.ToLower().Contains("airhorn");
+
+        PlayerControllerB playerControllerB = __instance.playerHeldBy;
+
+        if (playerControllerB.isInHangarShipRoom) return;
+
+        if (isClownHorn)
         {
-            StartOfRound.Instance.currentLevel
-                .Enemies
-                .RemoveAll(e => e.enemyType.enemyPrefab.GetComponent<JesterAI>() != null);
+            if (!InvokedJesters)
+            {
+                InvokedJesters = true;
+                HUDManager.Instance.AddTextToChatOnServer(
+                    $"{playerControllerB.playerUsername} is a clown! The expo is now outdoors!");
+
+                for (var i = 0; i < 4; i++)
+                {
+                    ModUtils.SpawnEnemyOutside(typeof(JesterAI), RoundManager.Instance.currentLevel, true);
+                }
+            }
+
+            Timing.RunCoroutine(SpawnLightning(playerControllerB));
         }
+
+        if (isAirHorn)
+        {
+            Timing.RunCoroutine(SpawnExplosion(playerControllerB));
+        }
+    }
+
+    private static IEnumerator<float> SpawnLightning(PlayerControllerB playerControllerB)
+    {
+        Vector3 transformPosition = playerControllerB.transform.position;
+
+        yield return Timing.WaitForSeconds(1.5f);
+
+        NetworkUtils.BroadcastAll(new PacketStrikeLightning
+        {
+            Position = transformPosition
+        });
+    }
+
+    private static IEnumerator<float> SpawnExplosion(PlayerControllerB playerControllerB)
+    {
+        Vector3 transformPosition = playerControllerB.transform.position;
+
+        yield return Timing.WaitForSeconds(2f);
+
+        NetworkUtils.BroadcastAll(new PacketSpawnExplosion
+        {
+            Position = transformPosition
+        });
     }
 }

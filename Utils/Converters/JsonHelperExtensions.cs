@@ -11,7 +11,7 @@ namespace FishsGrandAdventure.Utils.Converters
         /// <summary>
         /// This refers to the ctor that lets you specify the line number and
         /// position that was introduced in Json.NET v12.0.1.
-        /// <see cref="JsonSerializationException.JsonSerializationException(string, string, int, int, Exception)"/>
+        /// <see cref="JsonSerializationException"/>
         /// <see href="https://github.com/JamesNK/Newtonsoft.Json/blob/12.0.1/Src/Newtonsoft.Json/JsonSerializationException.cs#L110"/>
         /// </summary>
         internal static readonly ConstructorInfo _JsonSerializationExceptionPositionalCtor

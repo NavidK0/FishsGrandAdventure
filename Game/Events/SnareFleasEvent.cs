@@ -20,17 +20,17 @@ public class SnareFleasEvent : IGameEvent
 
             if (spawnableEnemyWithRarity.enemyType.enemyPrefab.GetComponent<CentipedeAI>() != null)
             {
-                spawnableEnemyWithRarity.rarity = 999;
+                spawnableEnemyWithRarity.rarity = 100;
             }
 
             if (spawnableEnemyWithRarity.enemyType.enemyPrefab.GetComponent<FlowermanAI>() != null)
             {
-                spawnableEnemyWithRarity.rarity = 999;
+                spawnableEnemyWithRarity.rarity = 100;
             }
 
             if (spawnableEnemyWithRarity.enemyType.enemyPrefab.GetComponent<SpringManAI>() != null)
             {
-                spawnableEnemyWithRarity.rarity = 999;
+                spawnableEnemyWithRarity.rarity = 100;
             }
         }
     }
