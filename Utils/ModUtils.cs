@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using GameNetcodeStuff;
 using JetBrains.Annotations;
 using Unity.Netcode;
 using UnityEngine;
@@ -58,7 +59,7 @@ public static class ModUtils
                        )
                     {
                         newLevel.spawnableScrap.Add(item);
-                        Plugin.Log.LogInfo($"Added event Item: >{item.spawnableItem.itemName}< for event");
+                        Plugin.Log.LogInfo($"Added event Item: {item.spawnableItem.itemName} for event");
                     }
                 }
             }
@@ -80,7 +81,7 @@ public static class ModUtils
                             e => e.enemyType.enemyPrefab != enemyPrefab))
                     {
                         newLevel.Enemies.Add(enemy);
-                        Plugin.Log.LogInfo($"Added event Enemy: >{enemy.enemyType.enemyPrefab.name}< for event");
+                        Plugin.Log.LogInfo($"Added event Enemy: {enemy.enemyType.enemyPrefab.name} for event");
                     }
                 }
             }
@@ -157,6 +158,85 @@ public static class ModUtils
         {
             component.enemyType.isOutsideEnemy = false;
             component.allAINodes = GameObject.FindGameObjectsWithTag("AINode");
+            component.SyncPositionToClients();
+        }
+
+        RoundManager.Instance.SpawnedEnemies.Add(component);
+        return component;
+    }
+
+    public static EnemyAI SpawnEnemyOutside(Type enemyType, SelectableLevel level, bool forceOutside, Vector3 position)
+    {
+        GameObject enemyPrefab = !forceOutside
+            ? FindEnemyPrefabByType(enemyType, RoundManager.Instance.currentLevel.OutsideEnemies, level)
+            : FindEnemyPrefabByType(enemyType, RoundManager.Instance.currentLevel.Enemies, level);
+
+        GameObject go = Object.Instantiate(enemyPrefab, position, Quaternion.identity);
+        go.GetComponentInChildren<NetworkObject>().Spawn(true);
+
+        EnemyAI component = go.GetComponent<EnemyAI>();
+        if (forceOutside)
+        {
+            component.enemyType.isOutsideEnemy = true;
+            component.allAINodes = GameObject.FindGameObjectsWithTag("OutsideAINode");
+            component.SyncPositionToClients();
+        }
+
+        RoundManager.Instance.SpawnedEnemies.Add(component);
+        return component;
+    }
+
+    public static EnemyAI SpawnEnemyFromVent(Type enemyType, SelectableLevel level, bool forceInside, Vector3 position)
+    {
+        GameObject enemyPrefab = !forceInside
+            ? FindEnemyPrefabByType(enemyType, RoundManager.Instance.currentLevel.Enemies, level)
+            : FindEnemyPrefabByType(enemyType, RoundManager.Instance.currentLevel.OutsideEnemies, level);
+
+        int num = Random.Range(0, RoundManager.Instance.allEnemyVents.Length);
+        var rot = Quaternion.Euler(0f, RoundManager.Instance.allEnemyVents[num].floorNode.eulerAngles.y, 0f);
+
+        GameObject go = Object.Instantiate(enemyPrefab, position, rot);
+        go.GetComponentInChildren<NetworkObject>().Spawn(true);
+
+        EnemyAI component = go.GetComponent<EnemyAI>();
+        if (forceInside)
+        {
+            component.enemyType.isOutsideEnemy = false;
+            component.allAINodes = GameObject.FindGameObjectsWithTag("AINode");
+            component.SyncPositionToClients();
+        }
+
+        RoundManager.Instance.SpawnedEnemies.Add(component);
+        return component;
+    }
+
+    public static EnemyAI SpawnEnemy(Type enemyType, SelectableLevel level,
+        Vector3 position, PlayerControllerB playerController
+    )
+    {
+        bool isInside = playerController.isInsideFactory;
+
+        GameObject enemyPrefab = isInside
+            ? FindEnemyPrefabByType(enemyType, RoundManager.Instance.currentLevel.Enemies, level)
+            : FindEnemyPrefabByType(enemyType, RoundManager.Instance.currentLevel.OutsideEnemies, level);
+
+        int num = Random.Range(0, RoundManager.Instance.allEnemyVents.Length);
+        var rot = Quaternion.Euler(0f, RoundManager.Instance.allEnemyVents[num].floorNode.eulerAngles.y, 0f);
+
+        GameObject go = Object.Instantiate(enemyPrefab, position, rot);
+        go.GetComponentInChildren<NetworkObject>().Spawn(true);
+
+        EnemyAI component = go.GetComponent<EnemyAI>();
+        if (isInside)
+        {
+            component.enemyType.isOutsideEnemy = false;
+            component.allAINodes = GameObject.FindGameObjectsWithTag("AINode");
+            component.SyncPositionToClients();
+        }
+        else
+        {
+            component.enemyType.isOutsideEnemy = true;
+            component.allAINodes = GameObject.FindGameObjectsWithTag("OutsideAINode");
             component.SyncPositionToClients();
         }
 

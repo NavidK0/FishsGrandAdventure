@@ -59,15 +59,6 @@ public class GameEventManager : MonoBehaviour
 
     private static Terminal Terminal => terminal != null ? terminal : terminal = FindObjectOfType<Terminal>();
 
-    private void Awake()
-    {
-        EnemyRarities.Clear();
-        LevelEnemySpawns.Clear();
-        EnemyPropCurves.Clear();
-
-        LevelHeatVal.Clear();
-    }
-
     private void OnDestroy()
     {
         EnemyRarities.Clear();
@@ -90,6 +81,11 @@ public class GameEventManager : MonoBehaviour
         LevelHeatVal.Clear();
 
         Plugin.Log.LogInfo("Clearing out events on StartOfRound Start method");
+
+        if (RoundManager.Instance.IsServer)
+        {
+            SetupNewEvent();
+        }
     }
 
     [HarmonyPatch(typeof(StartOfRound), "ResetMiscValues")]
@@ -261,11 +257,11 @@ public class GameEventManager : MonoBehaviour
     {
         GameState.CurrentGameEvent.OnFinishGeneratingLevel();
 
-        if (RoundManager.Instance.IsServer)
+        if (RoundManager.Instance.IsServer && GameState.CurrentGameEventType != GameEventType.None)
         {
             NetworkUtils.BroadcastAll(new PacketGameTip
             {
-                Header = "World Event",
+                Header = """Adventure Alert™""",
                 Body = GameState.CurrentGameEvent.Description
             });
         }

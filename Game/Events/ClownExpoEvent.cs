@@ -1,17 +1,37 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Linq;
 using FishsGrandAdventure.Network;
 using FishsGrandAdventure.Utils;
 using GameNetcodeStuff;
 using HarmonyLib;
 using MEC;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace FishsGrandAdventure.Game.Events;
 
 public class ClownExpoEvent : IGameEvent
 {
+    public const int MaxOutdoorJesters = 4;
+
+    public static readonly List<string> CongratsTexts = new List<string>
+    {
+        "Congrats!",
+        "Nice!",
+        "Wow!",
+        "Amazing!",
+        "Awesome!",
+        "Great!",
+        "Cool!",
+        "Incredible!",
+        "Fantastic!",
+        "Frytastic!",
+        "Frytacular!",
+        "French!",
+        "Baguette!",
+    };
+
     public string Description => $"Welcome to Clown Expo {DateTime.Today.Year}!";
     public Color Color => new Color32(252, 10, 0, 255);
     public GameEventType GameEventType => GameEventType.ClownExpo;
@@ -31,9 +51,9 @@ public class ClownExpoEvent : IGameEvent
             spawnableItemWithRarity.rarity =
                 spawnableItemWithRarity.spawnableItem.itemName.ToLower() switch
                 {
-                    "cash register" => 100,
-                    "clown horn" => 100,
-                    "airhorn" => 100,
+                    "cash register" => 999,
+                    "clown horn" => 50,
+                    "airhorn" => 50,
                     _ => 0
                 };
         }
@@ -57,15 +77,18 @@ public class ClownExpoEvent : IGameEvent
 
 public static class PatchClownExpo
 {
-    public static bool InvokedJesters;
+    public static double LastInputTime;
 
     [HarmonyPatch(typeof(GrabbableObject), "ActivateItemServerRpc")]
     [HarmonyPostfix]
     // ReSharper disable once InconsistentNaming
     private static void OnActivateItemServerRpc(GrabbableObject __instance, bool onOff, bool buttonDown)
     {
-        if (GameState.CurrentGameEventType != GameEventType.ClownWorld) return;
+        if (GameState.CurrentGameEventType != GameEventType.ClownExpo) return;
         if (!buttonDown) return;
+
+        // debounce
+        if (LastInputTime + 0.5f > Time.timeAsDouble) return;
 
         bool isClownHorn = __instance.itemProperties.itemName.ToLower().Contains("clown horn");
         bool isAirHorn = __instance.itemProperties.itemName.ToLower().Contains("airhorn");
@@ -76,48 +99,70 @@ public static class PatchClownExpo
 
         if (isClownHorn)
         {
-            if (!InvokedJesters)
+            if (RoundManager.Instance.SpawnedEnemies.Count(se =>
+                    se.enemyType.enemyPrefab.GetComponent<JesterAI>() != null) < ClownExpoEvent.MaxOutdoorJesters)
             {
-                InvokedJesters = true;
                 HUDManager.Instance.AddTextToChatOnServer(
-                    $"{playerControllerB.playerUsername} is a clown! The expo is now outdoors!");
+                    $"{playerControllerB.playerUsername} impressed everyone! The expo is now outdoors!"
+                );
 
-                for (var i = 0; i < 4; i++)
+                for (var i = 0; i < ClownExpoEvent.MaxOutdoorJesters; i++)
                 {
                     ModUtils.SpawnEnemyOutside(typeof(JesterAI), RoundManager.Instance.currentLevel, true);
                 }
             }
-
-            Timing.RunCoroutine(SpawnLightning(playerControllerB));
         }
 
         if (isAirHorn)
         {
-            Timing.RunCoroutine(SpawnExplosion(playerControllerB));
+            HUDManager.Instance.AddTextToChatOnServer(
+                $"{playerControllerB.playerUsername} impressed a Jester! {ClownExpoEvent.CongratsTexts.GetRandomElement()}"
+            );
+
+            ModUtils.SpawnEnemy(
+                typeof(JesterAI),
+                RoundManager.Instance.currentLevel,
+                playerControllerB.transform.position,
+                playerControllerB
+            );
         }
+
+        LastInputTime = Time.timeAsDouble;
     }
 
-    private static IEnumerator<float> SpawnLightning(PlayerControllerB playerControllerB)
+    [HarmonyPatch(typeof(JesterAI), "Update")]
+    [HarmonyPostfix]
+    // ReSharper disable once InconsistentNaming
+    private static void JesterAI(JesterAI __instance)
     {
-        Vector3 transformPosition = playerControllerB.transform.position;
+        if (GameState.CurrentGameEventType != GameEventType.ClownExpo ||
+            !RoundManager.Instance.IsServer ||
+            __instance.isEnemyDead
+           ) return;
 
-        yield return Timing.WaitForSeconds(1.5f);
+        bool outdoorsJester = __instance.isOutside;
 
-        NetworkUtils.BroadcastAll(new PacketStrikeLightning
+        if (outdoorsJester)
         {
-            Position = transformPosition
-        });
-    }
+            __instance.agent.speed = 5f;
+        }
 
-    private static IEnumerator<float> SpawnExplosion(PlayerControllerB playerControllerB)
-    {
-        Vector3 transformPosition = playerControllerB.transform.position;
-
-        yield return Timing.WaitForSeconds(2f);
-
-        NetworkUtils.BroadcastAll(new PacketSpawnExplosion
+        if (__instance.currentBehaviourStateIndex == 2)
         {
-            Position = transformPosition
-        });
+            Timing.CallDelayed(.5f, () =>
+            {
+                NetworkUtils.BroadcastAll(new PacketSpawnExplosion
+                {
+                    Position = __instance.transform.position,
+                    DamageRange = 10f,
+                    KillRange = 5f
+                });
+
+                __instance.agent.speed = 0f;
+                __instance.isEnemyDead = true;
+
+                __instance.GetComponentInChildren<NetworkObject>().Despawn();
+            });
+        }
     }
 }

@@ -46,6 +46,7 @@ public class ClownWorldEvent : IGameEvent
 public static class PatchClownWorld
 {
     public static bool Clownified;
+    public static double LastInputTime;
 
     [HarmonyPatch(typeof(GrabbableObject), "ActivateItemServerRpc")]
     [HarmonyPostfix]
@@ -54,6 +55,9 @@ public static class PatchClownWorld
     {
         if (GameState.CurrentGameEventType != GameEventType.ClownWorld) return;
         if (!buttonDown) return;
+
+        // debounce
+        if (LastInputTime + 0.5f > Time.timeAsDouble) return;
 
         bool isClownHorn = __instance.itemProperties.itemName.ToLower().Contains("clown horn");
         bool isAirHorn = __instance.itemProperties.itemName.ToLower().Contains("airhorn");
@@ -78,6 +82,8 @@ public static class PatchClownWorld
         {
             Timing.RunCoroutine(SpawnExplosion(playerControllerB));
         }
+
+        LastInputTime = Time.timeAsDouble;
     }
 
     private static IEnumerator<float> SpawnLightning(PlayerControllerB playerControllerB)

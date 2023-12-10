@@ -33,6 +33,7 @@ public class Plugin : BaseUnityPlugin
 
         // Patches
         harmony.PatchAll(typeof(PatchClownWorld));
+        harmony.PatchAll(typeof(PatchClownExpo));
         harmony.PatchAll(typeof(PatchSpeedRun));
         harmony.PatchAll(typeof(CommandListener));
         harmony.PatchAll(typeof(CustomMoonManager));
