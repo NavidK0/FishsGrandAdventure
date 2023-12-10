@@ -22,8 +22,6 @@ public class AllEvent : IGameEvent
 
         foreach (SpawnableEnemyWithRarity spawnableEnemyWithRarity9 in level.Enemies)
         {
-            spawnableEnemyWithRarity9.rarity = 0;
-
             if (spawnableEnemyWithRarity9.enemyType.enemyPrefab.GetComponent<FlowermanAI>() != null)
             {
                 spawnableEnemyWithRarity9.rarity = 100;

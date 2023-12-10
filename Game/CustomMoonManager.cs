@@ -86,6 +86,7 @@ public static class CustomMoonManager
         newLevel.OutsideEnemies = new List<SpawnableEnemyWithRarity>(titan.OutsideEnemies);
         newLevel.daytimeEnemiesProbabilityRange = titan.daytimeEnemiesProbabilityRange;
         newLevel.spawnableScrap = new List<SpawnableItemWithRarity>(titan.spawnableScrap);
+        newLevel.randomWeathers = rend.randomWeathers;
 
         newLevel.maxEnemyPowerCount = titan.maxEnemyPowerCount;
 

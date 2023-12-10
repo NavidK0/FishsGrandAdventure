@@ -140,7 +140,7 @@ public static class ModUtils
         return component;
     }
 
-    public static EnemyAI SpawnEnemyFromVent(Type enemyType, SelectableLevel level, bool forceInside)
+    public static EnemyAI SpawnEnemyInside(Type enemyType, SelectableLevel level, bool forceInside)
     {
         GameObject enemyPrefab = !forceInside
             ? FindEnemyPrefabByType(enemyType, RoundManager.Instance.currentLevel.Enemies, level)
@@ -186,7 +186,7 @@ public static class ModUtils
         return component;
     }
 
-    public static EnemyAI SpawnEnemyFromVent(Type enemyType, SelectableLevel level, bool forceInside, Vector3 position)
+    public static EnemyAI SpawnEnemyInside(Type enemyType, SelectableLevel level, bool forceInside, Vector3 position)
     {
         GameObject enemyPrefab = !forceInside
             ? FindEnemyPrefabByType(enemyType, RoundManager.Instance.currentLevel.Enemies, level)
@@ -211,11 +211,9 @@ public static class ModUtils
     }
 
     public static EnemyAI SpawnEnemy(Type enemyType, SelectableLevel level,
-        Vector3 position, PlayerControllerB playerController
+        Vector3 position, bool isInside
     )
     {
-        bool isInside = playerController.isInsideFactory;
-
         GameObject enemyPrefab = isInside
             ? FindEnemyPrefabByType(enemyType, RoundManager.Instance.currentLevel.Enemies, level)
             : FindEnemyPrefabByType(enemyType, RoundManager.Instance.currentLevel.OutsideEnemies, level);
@@ -256,7 +254,7 @@ public static class ModUtils
                         SpawnEnemyOutside(item.EnemyType, level, item.ForceOutside);
                         break;
                     case SpawnLocation.Vent:
-                        SpawnEnemyFromVent(item.EnemyType, level, item.ForceInside);
+                        SpawnEnemyInside(item.EnemyType, level, item.ForceInside);
                         break;
                 }
             }

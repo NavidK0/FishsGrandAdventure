@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using FishsGrandAdventure.Game;
+using FishsGrandAdventure.Utils;
 using UnityEngine;
 
 namespace FishsGrandAdventure.Network;
@@ -61,4 +63,37 @@ public class PacketDestroyEffects : Packet
 [Serializable]
 public class PacketResetPlayerSpeed : Packet
 {
+}
+
+[Serializable]
+public class PacketSpawnEnemy : Packet
+{
+    public Type EnemyType;
+    public int LevelId;
+    public Vector3 Position;
+    public ulong ClientId;
+    public bool Force;
+    public bool ForceOutside;
+    public bool IsInside;
+    public List<Type> ComponentsToAttach;
+}
+
+[Serializable]
+public class PacketSpawnEnemyOutside : Packet
+{
+    public Type EnemyType;
+    public int LevelId;
+    public Vector3? Position;
+    public bool ForceOutside;
+    public List<Type> ComponentsToAttach;
+}
+
+[Serializable]
+public class PacketSpawnEnemyInside : Packet
+{
+    public Type EnemyType;
+    public int LevelId;
+    public Vector3? Position;
+    public bool ForceInside;
+    public List<Type> ComponentsToAttach;
 }

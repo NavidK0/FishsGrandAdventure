@@ -53,7 +53,7 @@ public static class PatchClownWorld
     // ReSharper disable once InconsistentNaming
     private static void OnActivateItemServerRpc(GrabbableObject __instance, bool onOff, bool buttonDown)
     {
-        if (GameState.CurrentGameEventType != GameEventType.ClownWorld) return;
+        if (GameState.CurrentGameEvent?.GameEventType != GameEventType.ClownWorld) return;
         if (!buttonDown) return;
 
         // debounce
@@ -64,7 +64,7 @@ public static class PatchClownWorld
 
         PlayerControllerB playerControllerB = __instance.playerHeldBy;
 
-        if (playerControllerB.isInHangarShipRoom) return;
+        if (playerControllerB == null || playerControllerB.isInHangarShipRoom) return;
 
         if (isClownHorn)
         {

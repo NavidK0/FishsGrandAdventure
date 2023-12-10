@@ -48,5 +48,5 @@ public enum GameEventType
 
     ClownWorld,
 
-    ClownExpo,
+    ClownExpo
 }

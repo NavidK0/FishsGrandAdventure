@@ -46,7 +46,7 @@ public static class PatchSpeedRun
     // ReSharper disable once InconsistentNaming
     public static void PatchEnemySpeed(EnemyAI __instance)
     {
-        if (GameState.CurrentGameEventType == GameEventType.SpeedRun)
+        if (GameState.CurrentGameEvent?.GameEventType == GameEventType.SpeedRun)
         {
             __instance.agent.speed *= 2f;
         }

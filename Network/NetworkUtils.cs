@@ -37,6 +37,8 @@ public static class NetworkUtils
 
         string json = JsonConvert.SerializeObject(packet, SerializerSettings);
 
+        Plugin.Log.LogInfo($"Sending packet: {json}");
+
         PacketParser.Parse(json);
         LC_API.ServerAPI.Networking.Broadcast(json, Signature);
     }

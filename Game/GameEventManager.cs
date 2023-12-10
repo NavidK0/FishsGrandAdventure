@@ -61,10 +61,6 @@ public class GameEventManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        EnemyRarities.Clear();
-        LevelEnemySpawns.Clear();
-        EnemyPropCurves.Clear();
-
         LevelHeatVal.Clear();
 
         initialized = false;
@@ -74,10 +70,6 @@ public class GameEventManager : MonoBehaviour
     [HarmonyPostfix]
     private static void OnStartOfRoundStart()
     {
-        EnemyRarities.Clear();
-        LevelEnemySpawns.Clear();
-        EnemyPropCurves.Clear();
-
         LevelHeatVal.Clear();
 
         Plugin.Log.LogInfo("Clearing out events on StartOfRound Start method");
@@ -113,10 +105,16 @@ public class GameEventManager : MonoBehaviour
     {
         if (!RoundManager.Instance.IsServer || GameState.CurrentGameEvent == null) return;
 
-        NetworkUtils.BroadcastAll(new PacketGameEvent
+        if (GameState.CurrentGameEvent != null)
         {
-            GameEventType = GameState.CurrentGameEventType
-        });
+            Timing.CallDelayed(1f, () =>
+            {
+                NetworkUtils.BroadcastAll(new PacketGameEvent
+                {
+                    GameEventType = GameState.CurrentGameEvent.GameEventType
+                });
+            });
+        }
     }
 
     public static void SetupNewEvent()
@@ -144,17 +142,20 @@ public class GameEventManager : MonoBehaviour
             GameState.CurrentGameEvent = EnabledEvents.Find(e => e.GameEventType == GameEventType.None);
         }
 
-        NetworkUtils.BroadcastAll(new PacketGameEvent
+        if (GameState.CurrentGameEvent != null)
         {
-            GameEventType = GameState.CurrentGameEventType
-        });
+            NetworkUtils.BroadcastAll(new PacketGameEvent
+            {
+                GameEventType = GameState.CurrentGameEvent.GameEventType
+            });
 
-        SelectableLevel newLevel = RoundManager.Instance.currentLevel;
+            SelectableLevel newLevel = RoundManager.Instance.currentLevel;
 
-        HUDManager.Instance.AddTextToChatOnServer(
-            $"<color=#{GameState.CurrentGameEvent.Color.ToHex()}>Event: {GameState.CurrentGameEvent.Description}</color>");
+            HUDManager.Instance.AddTextToChatOnServer(
+                $"<color=#{GameState.CurrentGameEvent.Color.ToHex()}>Event: {GameState.CurrentGameEvent.Description}</color>");
 
-        GameState.CurrentGameEvent.OnServerInitialize(newLevel);
+            GameState.CurrentGameEvent.OnServerInitialize(newLevel);
+        }
     }
 
     [HarmonyPatch(typeof(RoundManager), "LoadNewLevel")]
@@ -188,8 +189,8 @@ public class GameEventManager : MonoBehaviour
             LevelHeatVal.TryGetValue(key, out float num);
             LevelHeatVal[key] = Mathf.Clamp(num - 5f, 0f, 100f);
 
-            if (GameState.CurrentGameEventType == GameEventType.HeatReset |
-                GameState.CurrentGameEventType == GameEventType.All)
+            if (GameState.CurrentGameEvent?.GameEventType == GameEventType.HeatReset |
+                GameState.CurrentGameEvent?.GameEventType == GameEventType.All)
             {
                 LevelHeatVal[key] = 0f;
             }
@@ -255,14 +256,14 @@ public class GameEventManager : MonoBehaviour
     [HarmonyPrefix]
     private static void OnFinishGeneratingLevel()
     {
-        GameState.CurrentGameEvent.OnFinishGeneratingLevel();
+        GameState.CurrentGameEvent?.OnFinishGeneratingLevel();
 
-        if (RoundManager.Instance.IsServer && GameState.CurrentGameEventType != GameEventType.None)
+        if (RoundManager.Instance.IsServer && GameState.CurrentGameEvent?.GameEventType != GameEventType.None)
         {
             NetworkUtils.BroadcastAll(new PacketGameTip
             {
                 Header = """Adventure Alert™""",
-                Body = GameState.CurrentGameEvent.Description
+                Body = GameState.CurrentGameEvent?.Description ?? "<unknown>"
             });
         }
     }
@@ -273,8 +274,8 @@ public class GameEventManager : MonoBehaviour
         {
             if (spawnableMapObject.prefabToSpawn.GetComponentInChildren<Turret>() != null)
             {
-                if (GameState.CurrentGameEventType == GameEventType.Turret |
-                    GameState.CurrentGameEventType == GameEventType.All)
+                if (GameState.CurrentGameEvent?.GameEventType == GameEventType.Turret |
+                    GameState.CurrentGameEvent?.GameEventType == GameEventType.All)
                 {
                     spawnableMapObject.numberToSpawn =
                         new AnimationCurve(new Keyframe(0f, 200f), new Keyframe(1f, 25f));
@@ -287,8 +288,8 @@ public class GameEventManager : MonoBehaviour
             }
             else if (spawnableMapObject.prefabToSpawn.GetComponentInChildren<Landmine>() != null)
             {
-                if (GameState.CurrentGameEventType == GameEventType.Landmine |
-                    GameState.CurrentGameEventType == GameEventType.All)
+                if (GameState.CurrentGameEvent?.GameEventType == GameEventType.Landmine |
+                    GameState.CurrentGameEvent?.GameEventType == GameEventType.All)
                 {
                     spawnableMapObject.numberToSpawn =
                         new AnimationCurve(new Keyframe(0f, 175f), new Keyframe(1f, 150f));
@@ -301,11 +302,6 @@ public class GameEventManager : MonoBehaviour
             }
 
             Plugin.Log.LogInfo(spawnableMapObject.prefabToSpawn.ToString());
-        }
-
-        foreach (SpawnableEnemyWithRarity spawnableEnemyWithRarity15 in selectableLevel.DaytimeEnemies)
-        {
-            Plugin.Log.LogInfo(spawnableEnemyWithRarity15.enemyType.enemyName);
         }
 
         selectableLevel.maxScrap += 45;
@@ -321,31 +317,15 @@ public class GameEventManager : MonoBehaviour
             new Keyframe(0.5f, 500f + heatLevel)
         );
 
-        selectableLevel.outsideEnemySpawnChanceThroughDay = new AnimationCurve(
-            new Keyframe(0f, -30f + heatLevel),
-            new Keyframe(20f, -30f + heatLevel),
-            new Keyframe(21f, 10f + heatLevel)
-        );
-
-        if (GameState.CurrentGameEventType == GameEventType.Bullshit ||
-            GameState.CurrentGameEventType == GameEventType.All)
-        {
-            selectableLevel.outsideEnemySpawnChanceThroughDay = new AnimationCurve(
-                new Keyframe(0f, 10f + heatLevel),
-                new Keyframe(20f, 10f + heatLevel),
-                new Keyframe(21f, 10f + heatLevel)
-            );
-        }
-
-        if (GameState.CurrentGameEventType == GameEventType.Hoarding ||
-            GameState.CurrentGameEventType == GameEventType.All)
+        if (GameState.CurrentGameEvent?.GameEventType == GameEventType.Hoarding ||
+            GameState.CurrentGameEvent?.GameEventType == GameEventType.All)
         {
             selectableLevel.enemySpawnChanceThroughoutDay =
                 new AnimationCurve(new Keyframe(0f, 500f + heatLevel));
         }
 
-        if (GameState.CurrentGameEventType == GameEventType.Chaos ||
-            GameState.CurrentGameEventType == GameEventType.All)
+        if (GameState.CurrentGameEvent?.GameEventType == GameEventType.Chaos ||
+            GameState.CurrentGameEvent?.GameEventType == GameEventType.All)
         {
             selectableLevel.enemySpawnChanceThroughoutDay =
                 new AnimationCurve(new Keyframe(0f, 500f + heatLevel));
