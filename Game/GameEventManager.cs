@@ -4,6 +4,7 @@ using FishsGrandAdventure.Game.Events;
 using FishsGrandAdventure.Network;
 using FishsGrandAdventure.Utils;
 using HarmonyLib;
+using Newtonsoft.Json;
 using UnityEngine;
 
 namespace FishsGrandAdventure.Game;
@@ -41,10 +42,13 @@ public class GameEventManager : MonoBehaviour
         new SpeedRunEvent(),
         new ClownWorldEvent(),
         new ClownExpoEvent(),
-        new RackAndRuinEvent()
+        new RackAndRollEvent()
     };
 
     private static readonly Dictionary<SelectableLevel, float> DangerLevels = new Dictionary<SelectableLevel, float>();
+
+    private static readonly Dictionary<int, SelectableLevel>
+        ClonedLevels = new Dictionary<int, SelectableLevel>();
 
     private static readonly Dictionary<SelectableLevel, List<SpawnableItemWithRarity>> OriginalItems =
         new Dictionary<SelectableLevel, List<SpawnableItemWithRarity>>();
@@ -59,6 +63,7 @@ public class GameEventManager : MonoBehaviour
         new Dictionary<SpawnableEnemyWithRarity, AnimationCurve>();
 
     private static Terminal terminal;
+
     private static bool initialized;
 
     private static Terminal Terminal => terminal != null ? terminal : terminal = FindObjectOfType<Terminal>();
@@ -66,6 +71,10 @@ public class GameEventManager : MonoBehaviour
     private void OnDestroy()
     {
         DangerLevels.Clear();
+        foreach (SelectableLevel selectableLevel in StartOfRound.Instance.levels)
+        {
+            ResetLevel(selectableLevel);
+        }
 
         initialized = false;
     }
@@ -75,6 +84,10 @@ public class GameEventManager : MonoBehaviour
     private static void OnStartOfRoundStart()
     {
         DangerLevels.Clear();
+        foreach (SelectableLevel selectableLevel in StartOfRound.Instance.levels)
+        {
+            ResetLevel(selectableLevel);
+        }
 
         Plugin.Log.LogInfo("Clearing out events on StartOfRound Start method");
 
@@ -155,8 +168,14 @@ public class GameEventManager : MonoBehaviour
 
             SelectableLevel newLevel = RoundManager.Instance.currentLevel;
 
+            if (!ClonedLevels.ContainsKey(newLevel.levelID))
+            {
+                ClonedLevels.Add(newLevel.levelID, Instantiate(newLevel));
+            }
+
             HUDManager.Instance.AddTextToChatOnServer(
-                $"<color=#{GameState.CurrentGameEvent.Color.ToHex()}>Event: {GameState.CurrentGameEvent.Description}</color>");
+                $"<color=#{GameState.CurrentGameEvent.Color.ToHex()}>Event: {GameState.CurrentGameEvent.Description}</color>"
+            );
 
             GameState.CurrentGameEvent.OnServerInitialize(newLevel);
         }
@@ -291,6 +310,9 @@ public class GameEventManager : MonoBehaviour
             Plugin.Log.LogInfo(spawnableMapObject.prefabToSpawn.ToString());
         }
 
+        Plugin.Log.LogInfo("SelectableLevel Debug: \n" +
+                           JsonConvert.SerializeObject(selectableLevel, NetworkUtils.SerializerSettings));
+
         selectableLevel.maxScrap += 45;
         selectableLevel.maxTotalScrapValue += 800;
         selectableLevel.daytimeEnemySpawnChanceThroughDay =
@@ -323,6 +345,23 @@ public class GameEventManager : MonoBehaviour
 
         Terminal.groupCredits += 120;
         Terminal.SyncGroupCreditsServerRpc(Terminal.groupCredits, Terminal.numberOfItemsInDropship);
+    }
+
+    private static void ResetLevel(SelectableLevel level)
+    {
+        if (ClonedLevels.TryGetValue(level.levelID, out SelectableLevel originalLevel))
+        {
+            level.spawnableMapObjects = originalLevel.spawnableMapObjects;
+
+            level.minScrap = originalLevel.minScrap;
+            level.maxScrap = originalLevel.maxScrap;
+            level.maxEnemyPowerCount = originalLevel.maxEnemyPowerCount;
+            level.maxOutsideEnemyPowerCount = originalLevel.maxEnemyPowerCount;
+            level.maxDaytimeEnemyPowerCount = originalLevel.maxDaytimeEnemyPowerCount;
+
+            level.daytimeEnemySpawnChanceThroughDay = originalLevel.daytimeEnemySpawnChanceThroughDay;
+            level.enemySpawnChanceThroughoutDay = originalLevel.enemySpawnChanceThroughoutDay;
+        }
     }
 
     private static void ResetEvents()

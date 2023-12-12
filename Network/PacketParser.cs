@@ -4,6 +4,7 @@ using FishsGrandAdventure.Game;
 using FishsGrandAdventure.Utils;
 using GameNetcodeStuff;
 using Newtonsoft.Json;
+using Unity.Netcode;
 
 namespace FishsGrandAdventure.Network;
 
@@ -188,6 +189,22 @@ public static class PacketParser
             case PacketStopMusic packet:
             {
                 AudioManager.StopMusic(packet.FadeOut, packet.FadeOutDuration);
+                break;
+            }
+
+            case PacketGrabItem packet:
+            {
+                PlayerControllerB playerController = StartOfRound.Instance.localPlayerController;
+
+                if (packet.ClientId == playerController.actualClientId)
+                {
+                    ulong networkObjectId = packet.NetworkObjectId;
+                    NetworkObject netObject =
+                        NetworkManager.Singleton.SpawnManager.SpawnedObjects[networkObjectId];
+
+                    playerController.GrabObject(netObject);
+                }
+
                 break;
             }
         }

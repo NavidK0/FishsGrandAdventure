@@ -113,3 +113,10 @@ public class PacketStopMusic : Packet
     public bool FadeOut;
     public float FadeOutDuration = 1f;
 }
+
+[Serializable]
+public class PacketGrabItem : Packet
+{
+    public ulong ClientId;
+    public ulong NetworkObjectId;
+}

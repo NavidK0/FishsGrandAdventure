@@ -8,12 +8,13 @@ namespace FishsGrandAdventure.Effects;
 public class PlayerEffectBlazed : Effect
 {
     private const float CooldownTime = 90;
+    private const float InitialFuelValue = 1.3f;
 
     public PlayerControllerB PlayerController;
 
     private float cooldown;
 
-    private float fuelValue = 1f;
+    private float fuelValue = InitialFuelValue;
 
     private bool musicStarted;
     private bool musicFadingOut = true;
@@ -64,7 +65,7 @@ public class PlayerEffectBlazed : Effect
 
         if (!musicFadingOut &&
             AudioManager.MusicSource.isPlaying &&
-            PlayerController.drunkness <= 0.3f)
+            PlayerController.drunkness <= 0.15f)
         {
             AudioManager.StopMusic(true, 2f);
             musicFadingOut = true;
@@ -84,21 +85,21 @@ public class PlayerEffectBlazed : Effect
                     Time.deltaTime / 1.75f * PlayerController.drunknessSpeed, 0.1f, 3f);
             PlayerController.increasingDrunknessThisFrame = true;
 
-            if (!AudioManager.MusicSource.isPlaying && !musicStarted && PlayerController.drunkness > 0.3f)
+            if (!AudioManager.MusicSource.isPlaying && !musicStarted && PlayerController.drunkness > 0.15f)
             {
-                AudioManager.PlayMusic("earthbound_baawo", .5f);
+                AudioManager.PlayMusic("earthbound_baawo", .6f);
 
                 musicStarted = true;
                 musicFadingOut = false;
             }
 
-            fuelValue -= Time.deltaTime / 22f;
+            fuelValue -= Time.deltaTime / 44f;
         }
 
         if (cooldown <= 0f && fuelValue <= 0f)
         {
             cooldown = CooldownTime;
-            fuelValue = 1f;
+            fuelValue = InitialFuelValue;
 
             musicStarted = false;
         }

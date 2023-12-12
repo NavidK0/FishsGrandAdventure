@@ -49,6 +49,7 @@ public class Plugin : BaseUnityPlugin
         harmony.PatchAll(typeof(PatchClownExpo));
         harmony.PatchAll(typeof(PatchSpeedRun));
         harmony.PatchAll(typeof(PatchSeaWorld));
+        harmony.PatchAll(typeof(PatchRackAndRoll));
         harmony.PatchAll(typeof(CommandListener));
         harmony.PatchAll(typeof(CustomMoonManager));
         harmony.PatchAll(typeof(PlayerControllerBPatcher));

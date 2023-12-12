@@ -28,8 +28,6 @@ public enum GameEventType
 
     All,
 
-    // Navid's Insane Wacky Tacky Events!!! OMG
-
     SethsFridge,
 
     NiceDay,
@@ -50,5 +48,7 @@ public enum GameEventType
 
     ClownExpo,
 
-    ThespianSociety
+    ThespianSociety,
+
+    RackAndRoll
 }

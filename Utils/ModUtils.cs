@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using GameNetcodeStuff;
 using HarmonyLib;
 using JetBrains.Annotations;
@@ -291,5 +292,66 @@ public static class ModUtils
                 }
             }
         }
+    }
+
+    public static int FirstEmptyItemSlot(this PlayerControllerB playerController)
+    {
+        int num = -1;
+
+        if (playerController.ItemSlots[playerController.currentItemSlot] == null)
+        {
+            num = playerController.currentItemSlot;
+        }
+        else
+        {
+            for (var index = 0; index < playerController.ItemSlots.Length; ++index)
+            {
+                if (playerController.ItemSlots[index] == null)
+                {
+                    num = index;
+                    break;
+                }
+            }
+        }
+
+        return num;
+    }
+
+    // PlayerController Helpers and Reflected Properties
+
+    public static MethodInfo SwitchToItemSlotMethod =
+        typeof(PlayerControllerB).GetMethod("SwitchToItemSlot", BindingFlags.NonPublic | BindingFlags.Instance);
+
+    public static MethodInfo GrabObjectServerRpcMethod =
+        typeof(PlayerControllerB).GetMethod("GrabObjectServerRpc", BindingFlags.NonPublic | BindingFlags.Instance);
+
+    public static MethodInfo GrabObjectClientRpcMethod =
+        typeof(PlayerControllerB).GetMethod("GrabObjectClientRpc", BindingFlags.NonPublic | BindingFlags.Instance);
+
+    public static FieldInfo GrabbedObjectValidatedField = typeof(PlayerControllerB).GetField("grabbedObjectValidated",
+        BindingFlags.NonPublic | BindingFlags.Instance);
+
+    private static readonly int GrabValidated = Animator.StringToHash("GrabValidated");
+
+    public static void SwitchToItemSlot(this PlayerControllerB playerController, int slot,
+        GrabbableObject grabbableObject = null)
+    {
+        SwitchToItemSlotMethod.Invoke(playerController, new object[] { slot, grabbableObject });
+    }
+
+    public static void GrabObject(this PlayerControllerB playerController,
+        NetworkObjectReference grabbedObjectRef)
+    {
+        grabbedObjectRef.TryGet(out NetworkObject netObject, NetworkManager.Singleton);
+        GrabbableObject grabbableObject = netObject.GetComponent<GrabbableObject>();
+        GrabObjectServerRpcMethod.Invoke(playerController, new object[] { grabbedObjectRef });
+        GrabbedObjectValidatedField.SetValue(playerController, true);
+
+        playerController.currentlyHeldObjectServer = grabbableObject;
+        playerController.currentlyHeldObjectServer.GrabItemOnClient();
+        playerController.isHoldingObject = true;
+        playerController.playerBodyAnimator.SetBool(GrabValidated, true);
+
+        GrabObjectClientRpcMethod.Invoke(playerController, new object[] { true, grabbedObjectRef });
     }
 }
