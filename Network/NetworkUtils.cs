@@ -5,7 +5,7 @@ namespace FishsGrandAdventure.Network;
 
 public static class NetworkUtils
 {
-    public const string Signature = "FishsGrandAdventure.Packet";
+    private const string Signature = "FishsGrandAdventure.Packet";
 
     public static readonly JsonSerializerSettings SerializerSettings = new JsonSerializerSettings
     {
@@ -40,7 +40,7 @@ public static class NetworkUtils
         Plugin.Log.LogInfo($"Sending packet: {json}");
 
         PacketParser.Parse(json);
-        LC_API.ServerAPI.Networking.Broadcast(json, Signature);
+        NetworkTransport.Broadcast(json, Signature);
     }
 
     public static void OnMessageReceived(string data, string signature)

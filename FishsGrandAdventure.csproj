@@ -3,8 +3,8 @@
     <PropertyGroup>
         <TargetFramework>net46</TargetFramework>
         <AssemblyName>FishsGrandAdventure</AssemblyName>
-        <Description>My first plugin</Description>
-        <Version>1.0.0</Version>
+        <Authors>Fish Clan</Authors>
+        <Description>Private mod for the Fish Clan.</Description>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <LangVersion>latest</LangVersion>
     </PropertyGroup>
@@ -12,7 +12,6 @@
     <ItemGroup>
         <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all"/>
         <PackageReference Include="BepInEx.Core" Version="5.*"/>
-        <PackageReference Include="BepInEx.PluginInfoProps" Version="1.*"/>
     </ItemGroup>
 
     <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
@@ -21,19 +20,19 @@
 
     <ItemGroup>
         <Reference Include="Assembly-CSharp">
-          <HintPath>F:\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Assembly-CSharp.dll</HintPath>
+            <HintPath>F:\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Assembly-CSharp.dll</HintPath>
+        </Reference>
+        <Reference Include="DissonanceVoip">
+          <HintPath>F:\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\DissonanceVoip.dll</HintPath>
         </Reference>
         <Reference Include="Facepunch.Steamworks.Win64">
-          <HintPath>F:\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Facepunch.Steamworks.Win64.dll</HintPath>
-        </Reference>
-        <Reference Include="LC_API">
-          <HintPath>LC_API.dll</HintPath>
+            <HintPath>F:\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Facepunch.Steamworks.Win64.dll</HintPath>
         </Reference>
         <Reference Include="netstandard">
             <HintPath>F:\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\netstandard.dll</HintPath>
         </Reference>
         <Reference Include="Newtonsoft.Json">
-          <HintPath>F:\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Newtonsoft.Json.dll</HintPath>
+            <HintPath>F:\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Newtonsoft.Json.dll</HintPath>
         </Reference>
         <Reference Include="Unity.InputSystem">
             <HintPath>F:\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Unity.InputSystem.dll</HintPath>
@@ -50,6 +49,9 @@
         <Reference Include="UnityEngine.AIModule">
             <HintPath>F:\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.AIModule.dll</HintPath>
         </Reference>
+        <Reference Include="UnityEngine.AudioModule">
+            <HintPath>F:\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.AudioModule.dll</HintPath>
+        </Reference>
         <Reference Include="UnityEngine.CoreModule">
             <HintPath>F:\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
         </Reference>
@@ -57,6 +59,22 @@
             <HintPath>F:\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.UI.dll</HintPath>
         </Reference>
         <None Remove="DecompiledReference\**"/>
+        <None Remove="ModPacker\**" />
+        <Reference Include="UnityEngine.UnityWebRequestAssetBundleModule">
+          <HintPath>F:\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.UnityWebRequestAssetBundleModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.UnityWebRequestAudioModule">
+          <HintPath>F:\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.UnityWebRequestAudioModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.UnityWebRequestModule">
+          <HintPath>F:\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.UnityWebRequestModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.UnityWebRequestTextureModule">
+          <HintPath>F:\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.UnityWebRequestTextureModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.UnityWebRequestWWWModule">
+          <HintPath>F:\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
+        </Reference>
     </ItemGroup>
 
     <ItemGroup>
@@ -64,6 +82,15 @@
     </ItemGroup>
 
     <ItemGroup>
+        <Compile Remove="ModPacker\**"/>
+    </ItemGroup>
+
+    <ItemGroup>
         <EmbeddedResource Remove="DecompiledReference\**"/>
+        <EmbeddedResource Remove="ModPacker\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="Assets\**" CopyToOutputDirectory="Always"/>
     </ItemGroup>
 </Project>

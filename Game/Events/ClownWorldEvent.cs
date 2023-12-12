@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using FishsGrandAdventure.Network;
+using FishsGrandAdventure.Utils;
 using GameNetcodeStuff;
 using HarmonyLib;
-using MEC;
 using UnityEngine;
 
 namespace FishsGrandAdventure.Game.Events;
@@ -20,6 +20,8 @@ public class ClownWorldEvent : IGameEvent
 
     public void OnBeforeModifyLevel(ref SelectableLevel level)
     {
+        ModUtils.AddSpecificItemsForEvent(level, new List<string> { "airhorn", "clown horn" });
+
         // Replace all items with horns :)
         foreach (SpawnableItemWithRarity spawnableItemWithRarity in level.spawnableScrap)
         {
@@ -50,7 +52,6 @@ public static class PatchClownWorld
 
     [HarmonyPatch(typeof(GrabbableObject), "ActivateItemServerRpc")]
     [HarmonyPostfix]
-    // ReSharper disable once InconsistentNaming
     private static void OnActivateItemServerRpc(GrabbableObject __instance, bool onOff, bool buttonDown)
     {
         if (GameState.CurrentGameEvent?.GameEventType != GameEventType.ClownWorld) return;

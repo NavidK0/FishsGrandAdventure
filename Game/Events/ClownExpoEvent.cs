@@ -6,7 +6,6 @@ using FishsGrandAdventure.Network;
 using FishsGrandAdventure.Utils;
 using GameNetcodeStuff;
 using HarmonyLib;
-using MEC;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -43,7 +42,7 @@ public class ClownExpoEvent : IGameEvent
 
     public void OnBeforeModifyLevel(ref SelectableLevel level)
     {
-        ModUtils.AddSpecificItemsForEvent(level, new List<string> { "cash register" });
+        ModUtils.AddSpecificItemsForEvent(level, new List<string> { "cash register", "airhorn", "clown horn" });
         ModUtils.AddSpecificEnemiesForEvent(level, new List<Type> { typeof(JesterAI) });
 
         // Replace all items with cash registers :)
@@ -89,7 +88,6 @@ public static class PatchClownExpo
 
     [HarmonyPatch(typeof(PlayerControllerB), "GrabObjectServerRpc")]
     [HarmonyPostfix]
-    // ReSharper disable once InconsistentNaming
     private static void GrabObjectServerRpc(ref NetworkObjectReference grabbedObject)
     {
         if (GameState.CurrentGameEvent?.GameEventType != GameEventType.ClownExpo) return;
@@ -130,7 +128,6 @@ public static class PatchClownExpo
 
     [HarmonyPatch(typeof(GrabbableObject), "ActivateItemServerRpc")]
     [HarmonyPostfix]
-    // ReSharper disable once InconsistentNaming
     private static void OnActivateItemServerRpc(GrabbableObject __instance, bool onOff, bool buttonDown)
     {
         if (GameState.CurrentGameEvent?.GameEventType != GameEventType.ClownExpo) return;

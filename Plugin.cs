@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using BepInEx;
 using BepInEx.Logging;
+using FishsGrandAdventure.Audio;
 using FishsGrandAdventure.Game;
 using FishsGrandAdventure.Game.Events;
 using FishsGrandAdventure.Network;
@@ -10,9 +11,17 @@ using UnityEngine;
 
 namespace FishsGrandAdventure;
 
-[BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
+public static class ModInfo
+{
+    public const string Guid = "FishsGrandAdventure";
+    public const string Name = "Fish's Grand Adventure";
+    public const string Version = "1.1.0";
+}
+
+[BepInPlugin(ModInfo.Guid, ModInfo.Name, ModInfo.Version)]
 public class Plugin : BaseUnityPlugin
 {
+    public static string FileLocation;
     public static ManualLogSource Log;
     public static MethodInfo Chat;
 
@@ -22,6 +31,7 @@ public class Plugin : BaseUnityPlugin
 
     private void Awake()
     {
+        FileLocation = Info.Location;
         Log = Logger;
 
         Chat = AccessTools.Method(typeof(HUDManager), "AddChatMessage");
@@ -30,6 +40,9 @@ public class Plugin : BaseUnityPlugin
 
         // Game Event Manager
         harmony.PatchAll(typeof(GameEventManager));
+
+        // Network Transport Patch
+        harmony.PatchAll(typeof(NetworkTransportPatch));
 
         // Patches
         harmony.PatchAll(typeof(PatchClownWorld));
@@ -40,7 +53,7 @@ public class Plugin : BaseUnityPlugin
         harmony.PatchAll(typeof(CustomMoonManager));
         harmony.PatchAll(typeof(PlayerControllerBPatcher));
 
-        LC_API.ServerAPI.Networking.GetString += NetworkUtils.OnMessageReceived;
+        NetworkTransport.GetString += NetworkUtils.OnMessageReceived;
     }
 
     public void OnDestroy()
@@ -53,9 +66,15 @@ public class Plugin : BaseUnityPlugin
 
             Log.LogInfo("Added GameEventManager");
 
+            var audioManagerGo = new GameObject("FishsGrandAdventure.AudioManager");
+            eventManagerGo.AddComponent<AudioManager>();
+            DontDestroyOnLoad(audioManagerGo);
+
+            Log.LogInfo("Added AudioManager");
+
             loaded = true;
 
-            Log.LogInfo("Loaded Fish's Grand Adventure!");
+            Log.LogInfo($"Loaded Fish's Grand Adventure v{ModInfo.Version}");
         }
     }
 }

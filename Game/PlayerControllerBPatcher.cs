@@ -8,7 +8,6 @@ public static class PlayerControllerBPatcher
 {
     [HarmonyPatch(typeof(PlayerControllerB), "Update")]
     [HarmonyPostfix]
-    // ReSharper disable once InconsistentNaming
     private static void SetPlayerMovementSpeed(ref float ___movementSpeed)
     {
         if (GameState.ForcePlayerMovementSpeed != null)

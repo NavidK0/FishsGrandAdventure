@@ -1,4 +1,5 @@
 ﻿using System;
+using FishsGrandAdventure.Audio;
 using FishsGrandAdventure.Game;
 using FishsGrandAdventure.Utils;
 using GameNetcodeStuff;
@@ -23,46 +24,55 @@ public static class PacketParser
                     GameEventManager.EnabledEvents.Find(e => e.GameEventType == packet.GameEventType);
                 break;
             }
+
             case PacketPlayersBlazed:
             {
                 ClientHelper.SetupBlazedPlayer();
                 break;
             }
+
             case PacketSetPlayerMoveSpeed packet:
             {
                 ClientHelper.SetPlayerMoveSpeed(packet.Speed);
                 break;
             }
+
             case PacketSpawnExplosion packet:
             {
                 ClientHelper.SpawnExplosion(packet.Position, packet.KillRange, packet.DamageRange);
                 break;
             }
+
             case PacketStrikeLightning packet:
             {
                 ClientHelper.StrikeLightning(packet.Position);
                 break;
             }
+
             case PacketGlobalTimeSpeedMultiplier packet:
             {
                 TimeOfDay.Instance.globalTimeSpeedMultiplier = packet.Multiplier;
                 break;
             }
+
             case PacketDestroyEffects:
             {
                 ClientHelper.DestroyEffects();
                 break;
             }
+
             case PacketResetPlayerSpeed:
             {
                 ClientHelper.ResetPlayerMoveSpeed();
                 break;
             }
+
             case PacketGameTip packet:
             {
                 HUDManager.Instance.DisplayTip(packet.Header, packet.Body);
                 break;
             }
+
             case PacketSpawnEnemy packet:
             {
                 if (!RoundManager.Instance.IsServer) break;
@@ -86,6 +96,7 @@ public static class PacketParser
 
                 break;
             }
+
             case PacketSpawnEnemyOutside packet:
             {
                 if (!RoundManager.Instance.IsServer) break;
@@ -126,6 +137,7 @@ public static class PacketParser
 
                 break;
             }
+
             case PacketSpawnEnemyInside packet:
             {
                 if (!RoundManager.Instance.IsServer) break;
@@ -164,6 +176,18 @@ public static class PacketParser
                     }
                 }
 
+                break;
+            }
+
+            case PacketPlayMusic packet:
+            {
+                AudioManager.PlayMusic(packet.Name, packet.Volume, packet.Pitch, packet.Loop);
+                break;
+            }
+
+            case PacketStopMusic packet:
+            {
+                AudioManager.StopMusic(packet.FadeOut, packet.FadeOutDuration);
                 break;
             }
         }

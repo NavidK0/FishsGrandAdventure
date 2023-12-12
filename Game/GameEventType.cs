@@ -24,7 +24,7 @@ public enum GameEventType
 
     Psychosis,
 
-    HeatReset,
+    DangerReset,
 
     All,
 
@@ -48,5 +48,7 @@ public enum GameEventType
 
     ClownWorld,
 
-    ClownExpo
+    ClownExpo,
+
+    ThespianSociety
 }

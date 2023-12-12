@@ -43,7 +43,6 @@ public static class PatchSpeedRun
 {
     [HarmonyPatch(typeof(EnemyAI), "Start")]
     [HarmonyPostfix]
-    // ReSharper disable once InconsistentNaming
     public static void PatchEnemySpeed(EnemyAI __instance)
     {
         if (GameState.CurrentGameEvent?.GameEventType == GameEventType.SpeedRun)

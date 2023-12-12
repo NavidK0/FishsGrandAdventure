@@ -1,7 +1,7 @@
 ﻿using System;
 using FishsGrandAdventure.Game;
 using FishsGrandAdventure.Network;
-using MEC;
+using FishsGrandAdventure.Utils;
 using Unity.Netcode;
 using UnityEngine;
 

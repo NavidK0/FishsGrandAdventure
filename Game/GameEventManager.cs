@@ -4,7 +4,6 @@ using FishsGrandAdventure.Game.Events;
 using FishsGrandAdventure.Network;
 using FishsGrandAdventure.Utils;
 using HarmonyLib;
-using MEC;
 using UnityEngine;
 
 namespace FishsGrandAdventure.Game;
@@ -15,6 +14,7 @@ public class GameEventManager : MonoBehaviour
 
     public static readonly List<IGameEvent> EnabledEvents = new List<IGameEvent>
     {
+        // Standard events (server-side)
         new NoneEvent(),
         new TurretEvent(),
         new LandmineEvent(),
@@ -26,9 +26,11 @@ public class GameEventManager : MonoBehaviour
         new DeliveryEvent(),
         new WalkieTalkieEvent(),
         new PsychosisEvent(),
-        new HeatResetEvent(),
+        new DangerResetEvent(),
         new AllEvent(),
+        new ThespianSocietyEvent(),
 
+        // Special events
         new SethsFridgeEvent(),
         new NiceDayEvent(),
         new HorribleDayEvent(),
@@ -38,20 +40,22 @@ public class GameEventManager : MonoBehaviour
         new SeaWorldEvent(),
         new SpeedRunEvent(),
         new ClownWorldEvent(),
-        new ClownExpoEvent()
+        new ClownExpoEvent(),
+        new RackAndRuinEvent()
     };
 
-    private static readonly Dictionary<SelectableLevel, float> LevelHeatVal = new Dictionary<SelectableLevel, float>();
-    private static readonly Dictionary<SelectableLevel, GameEventType> MoonEvents =
-        new Dictionary<SelectableLevel, GameEventType>();
+    private static readonly Dictionary<SelectableLevel, float> DangerLevels = new Dictionary<SelectableLevel, float>();
 
-    private static readonly Dictionary<SelectableLevel, List<SpawnableEnemyWithRarity>> LevelEnemySpawns =
+    private static readonly Dictionary<SelectableLevel, List<SpawnableItemWithRarity>> OriginalItems =
+        new Dictionary<SelectableLevel, List<SpawnableItemWithRarity>>();
+
+    private static readonly Dictionary<SelectableLevel, List<SpawnableEnemyWithRarity>> OriginalEnemies =
         new Dictionary<SelectableLevel, List<SpawnableEnemyWithRarity>>();
 
-    private static readonly Dictionary<SpawnableEnemyWithRarity, int> EnemyRarities =
-        new Dictionary<SpawnableEnemyWithRarity, int>();
+    private static readonly Dictionary<SelectableLevel, List<SpawnableOutsideObjectWithRarity>> OriginalOutsideObjects =
+        new Dictionary<SelectableLevel, List<SpawnableOutsideObjectWithRarity>>();
 
-    private static readonly Dictionary<SpawnableEnemyWithRarity, AnimationCurve> EnemyPropCurves =
+    private static readonly Dictionary<SpawnableEnemyWithRarity, AnimationCurve> OriginalEnemyPropCurves =
         new Dictionary<SpawnableEnemyWithRarity, AnimationCurve>();
 
     private static Terminal terminal;
@@ -61,7 +65,7 @@ public class GameEventManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        LevelHeatVal.Clear();
+        DangerLevels.Clear();
 
         initialized = false;
     }
@@ -70,7 +74,7 @@ public class GameEventManager : MonoBehaviour
     [HarmonyPostfix]
     private static void OnStartOfRoundStart()
     {
-        LevelHeatVal.Clear();
+        DangerLevels.Clear();
 
         Plugin.Log.LogInfo("Clearing out events on StartOfRound Start method");
 
@@ -165,82 +169,65 @@ public class GameEventManager : MonoBehaviour
         if (!RoundManager.Instance.IsServer)
             return true;
 
-        if (!LevelHeatVal.ContainsKey(newLevel))
+        if (!DangerLevels.ContainsKey(newLevel))
         {
-            LevelHeatVal.Add(newLevel, 0f);
+            DangerLevels.Add(newLevel, 0f);
         }
 
-        if (!LevelEnemySpawns.ContainsKey(newLevel))
+        foreach (SelectableLevel key in DangerLevels.Keys.ToList())
         {
-            List<SpawnableEnemyWithRarity> list = new List<SpawnableEnemyWithRarity>();
-            foreach (SpawnableEnemyWithRarity item in newLevel.Enemies)
-            {
-                list.Add(item);
-            }
+            DangerLevels.TryGetValue(key, out float num);
+            DangerLevels[key] = Mathf.Clamp(num - 5f, 0f, 100f);
 
-            LevelEnemySpawns.Add(newLevel, list);
-        }
-
-        LevelEnemySpawns.TryGetValue(newLevel, out List<SpawnableEnemyWithRarity> enemies);
-        newLevel.Enemies = enemies;
-
-        foreach (SelectableLevel key in LevelHeatVal.Keys.ToList())
-        {
-            LevelHeatVal.TryGetValue(key, out float num);
-            LevelHeatVal[key] = Mathf.Clamp(num - 5f, 0f, 100f);
-
-            if (GameState.CurrentGameEvent?.GameEventType == GameEventType.HeatReset |
+            if (GameState.CurrentGameEvent?.GameEventType == GameEventType.DangerReset |
                 GameState.CurrentGameEvent?.GameEventType == GameEventType.All)
             {
-                LevelHeatVal[key] = 0f;
+                DangerLevels[key] = 0f;
             }
         }
 
-        LevelHeatVal.TryGetValue(newLevel, out float heatLevel);
+        DangerLevels.TryGetValue(newLevel, out float dangerLevel);
 
         HUDManager.Instance.AddTextToChatOnServer(
             "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
         );
         HUDManager.Instance.AddTextToChatOnServer(
-            $"<color=orange>Moon is at {heatLevel}% heat.</color>"
+            $"<color=orange>Danger Level: {dangerLevel}%</color>"
         );
 
-        if (heatLevel > 49f)
+        if (dangerLevel > 49f)
         {
             HUDManager.Instance.AddTextToChatOnServer(
-                "<color=red>The heat level is comically high. <color=white>\nVisit other moons to lower the heat level.</color>"
+                "<color=red>WARNING: Critical danger levels! Proceed with extreme caution.</color>"
             );
         }
 
+        // Reset the enemy spawns
+        ResetItems(newLevel);
+        ResetEnemies(newLevel);
+        ResetOutsideObjects(newLevel);
+
         if (newLevel.Enemies != null)
         {
-            foreach (SpawnableEnemyWithRarity spawnableEnemyWithRarity in newLevel.Enemies)
+            foreach (SpawnableEnemyWithRarity enemy in newLevel.Enemies)
             {
-                if (!EnemyRarities.ContainsKey(spawnableEnemyWithRarity))
+                if (!OriginalEnemyPropCurves.ContainsKey(enemy))
                 {
-                    EnemyRarities.Add(spawnableEnemyWithRarity, spawnableEnemyWithRarity.rarity);
+                    OriginalEnemyPropCurves.Add(enemy,
+                        enemy.enemyType.probabilityCurve);
                 }
 
-                EnemyRarities.TryGetValue(spawnableEnemyWithRarity, out int rarity);
-                spawnableEnemyWithRarity.rarity = rarity;
-            }
-
-            foreach (SpawnableEnemyWithRarity spawnableEnemyWithRarity2 in newLevel.Enemies)
-            {
-                if (!EnemyPropCurves.ContainsKey(spawnableEnemyWithRarity2))
-                {
-                    EnemyPropCurves.Add(spawnableEnemyWithRarity2,
-                        spawnableEnemyWithRarity2.enemyType.probabilityCurve);
-                }
-
-                EnemyPropCurves.TryGetValue(spawnableEnemyWithRarity2, out AnimationCurve probabilityCurve);
-                spawnableEnemyWithRarity2.enemyType.probabilityCurve = probabilityCurve;
+                OriginalEnemyPropCurves.TryGetValue(enemy, out AnimationCurve probabilityCurve);
+                enemy.enemyType.probabilityCurve = probabilityCurve;
             }
         }
 
-        GameState.CurrentGameEvent.OnBeforeModifyLevel(ref newLevel);
+        if (GameState.CurrentGameEvent != null)
+        {
+            GameState.CurrentGameEvent.OnBeforeModifyLevel(ref newLevel);
+        }
 
-        AddBaseModifiers(newLevel, heatLevel);
+        AddBaseModifiers(newLevel, dangerLevel);
 
         return true;
     }
@@ -268,7 +255,7 @@ public class GameEventManager : MonoBehaviour
         }
     }
 
-    private static void AddBaseModifiers(SelectableLevel selectableLevel, float heatLevel)
+    private static void AddBaseModifiers(SelectableLevel selectableLevel, float dangerLevel)
     {
         foreach (SpawnableMapObject spawnableMapObject in selectableLevel.spawnableMapObjects)
         {
@@ -313,26 +300,26 @@ public class GameEventManager : MonoBehaviour
         selectableLevel.maxDaytimeEnemyPowerCount += 200;
 
         selectableLevel.enemySpawnChanceThroughoutDay = new AnimationCurve(
-            new Keyframe(0f, 0.1f + heatLevel),
-            new Keyframe(0.5f, 500f + heatLevel)
+            new Keyframe(0f, 0.1f + dangerLevel),
+            new Keyframe(0.5f, 500f + dangerLevel)
         );
 
         if (GameState.CurrentGameEvent?.GameEventType == GameEventType.Hoarding ||
             GameState.CurrentGameEvent?.GameEventType == GameEventType.All)
         {
             selectableLevel.enemySpawnChanceThroughoutDay =
-                new AnimationCurve(new Keyframe(0f, 500f + heatLevel));
+                new AnimationCurve(new Keyframe(0f, 500f + dangerLevel));
         }
 
         if (GameState.CurrentGameEvent?.GameEventType == GameEventType.Chaos ||
             GameState.CurrentGameEvent?.GameEventType == GameEventType.All)
         {
             selectableLevel.enemySpawnChanceThroughoutDay =
-                new AnimationCurve(new Keyframe(0f, 500f + heatLevel));
+                new AnimationCurve(new Keyframe(0f, 500f + dangerLevel));
         }
 
-        LevelHeatVal.TryGetValue(selectableLevel, out heatLevel);
-        LevelHeatVal[selectableLevel] = Mathf.Clamp(heatLevel + 20f, 0f, 100f);
+        DangerLevels.TryGetValue(selectableLevel, out dangerLevel);
+        DangerLevels[selectableLevel] = Mathf.Clamp(dangerLevel + 20f, 0f, 100f);
 
         Terminal.groupCredits += 120;
         Terminal.SyncGroupCreditsServerRpc(Terminal.groupCredits, Terminal.numberOfItemsInDropship);
@@ -352,5 +339,60 @@ public class GameEventManager : MonoBehaviour
         }
 
         StartOfRound.Instance.RefreshPlayerVoicePlaybackObjects();
+    }
+
+    private static void ResetItems(SelectableLevel newLevel)
+    {
+        if (!OriginalItems.ContainsKey(newLevel))
+        {
+            List<SpawnableItemWithRarity> list = new List<SpawnableItemWithRarity>();
+            foreach (SpawnableItemWithRarity item in newLevel.spawnableScrap)
+            {
+                list.Add(item);
+            }
+
+            OriginalItems.Add(newLevel, list);
+        }
+
+        OriginalItems.TryGetValue(newLevel, out List<SpawnableItemWithRarity> spawnableScrap);
+        newLevel.spawnableScrap = spawnableScrap;
+    }
+
+    private static void ResetEnemies(SelectableLevel newLevel)
+    {
+        if (!OriginalEnemies.ContainsKey(newLevel))
+        {
+            List<SpawnableEnemyWithRarity> list = new List<SpawnableEnemyWithRarity>();
+            foreach (SpawnableEnemyWithRarity item in newLevel.Enemies)
+            {
+                list.Add(item);
+            }
+
+            OriginalEnemies.Add(newLevel, list);
+        }
+
+        OriginalEnemies.TryGetValue(newLevel, out List<SpawnableEnemyWithRarity> enemies);
+        newLevel.Enemies = enemies;
+    }
+
+    private static void ResetOutsideObjects(SelectableLevel newLevel)
+    {
+        if (!OriginalOutsideObjects.ContainsKey(newLevel))
+        {
+            List<SpawnableOutsideObjectWithRarity> list = new List<SpawnableOutsideObjectWithRarity>();
+            foreach (SpawnableOutsideObjectWithRarity item in newLevel.spawnableOutsideObjects)
+            {
+                list.Add(item);
+            }
+
+            OriginalOutsideObjects.Add(newLevel, list);
+        }
+
+        OriginalOutsideObjects.TryGetValue(newLevel, out List<SpawnableOutsideObjectWithRarity> outsideObjects);
+
+        if (outsideObjects != null)
+        {
+            newLevel.spawnableOutsideObjects = outsideObjects.ToArray();
+        }
     }
 }

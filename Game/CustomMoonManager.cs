@@ -20,7 +20,6 @@ public static class CustomMoonManager
 
     [HarmonyPatch(typeof(StartOfRound), "Awake")]
     [HarmonyPostfix]
-    // ReSharper disable once InconsistentNaming
     private static void AddCustomMoonsAwake(StartOfRound __instance)
     {
         if (Loaded) return;
@@ -56,7 +55,6 @@ public static class CustomMoonManager
 
     [HarmonyPatch(typeof(StartOfRound), "OnDestroy")]
     [HarmonyPostfix]
-    // ReSharper disable once InconsistentNaming
     private static void AddCustomMoonsOnDestroy(StartOfRound __instance)
     {
         OriginalLevels.Clear();

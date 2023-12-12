@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using GameNetcodeStuff;
+using HarmonyLib;
 using JetBrains.Annotations;
 using Unity.Netcode;
 using UnityEngine;
@@ -59,7 +60,7 @@ public static class ModUtils
                        )
                     {
                         newLevel.spawnableScrap.Add(item);
-                        Plugin.Log.LogInfo($"Added event Item: {item.spawnableItem.itemName} for event");
+                        Plugin.Log.LogInfo($"Added event Item: {item.spawnableItem.itemName}");
                     }
                 }
             }
@@ -81,7 +82,37 @@ public static class ModUtils
                             e => e.enemyType.enemyPrefab != enemyPrefab))
                     {
                         newLevel.Enemies.Add(enemy);
-                        Plugin.Log.LogInfo($"Added event Enemy: {enemy.enemyType.enemyPrefab.name} for event");
+                        Plugin.Log.LogInfo($"Added event Enemy: {enemy.enemyType.enemyPrefab.name}");
+                    }
+                }
+            }
+        }
+    }
+
+    public static void AddSpecificOutsideObjectsForEvent(SelectableLevel newLevel, List<string> outsideObjectNames)
+    {
+        SelectableLevel[] levels = StartOfRound.Instance.levels;
+        foreach (SelectableLevel sl in levels)
+        {
+            foreach (SpawnableOutsideObjectWithRarity outsideObject in sl.spawnableOutsideObjects)
+            {
+                SpawnableOutsideObject spawnableObject = outsideObject.spawnableObject;
+                foreach (string objectName in outsideObjectNames)
+                {
+                    if (spawnableObject.prefabToSpawn.name.ToLower() == objectName &&
+                        newLevel.spawnableOutsideObjects.All(
+                            s =>
+                                !string.Equals(
+                                    s.spawnableObject.prefabToSpawn.name,
+                                    spawnableObject.prefabToSpawn.name,
+                                    StringComparison.CurrentCultureIgnoreCase
+                                )
+                        )
+                       )
+                    {
+                        newLevel.spawnableOutsideObjects = newLevel.spawnableOutsideObjects.AddToArray(outsideObject);
+                        Plugin.Log.LogInfo(
+                            $"Added event Outside Object: {outsideObject.spawnableObject.prefabToSpawn.name}");
                     }
                 }
             }
@@ -253,6 +284,7 @@ public static class ModUtils
                     case SpawnLocation.Outside:
                         SpawnEnemyOutside(item.EnemyType, level, item.ForceOutside);
                         break;
+
                     case SpawnLocation.Vent:
                         SpawnEnemyInside(item.EnemyType, level, item.ForceInside);
                         break;

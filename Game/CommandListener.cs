@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Linq;
-using FishsGrandAdventure.Game;
+using FishsGrandAdventure.Audio;
 using FishsGrandAdventure.Network;
 using GameNetcodeStuff;
 using HarmonyLib;
-using Microsoft.SqlServer.Server;
 using Newtonsoft.Json;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using Object = UnityEngine.Object;
 
-namespace FishsGrandAdventure.Patches;
+namespace FishsGrandAdventure.Game;
 
 internal class CommandListener
 {
@@ -18,7 +17,6 @@ internal class CommandListener
 
     [HarmonyPatch(typeof(HUDManager), "SubmitChat_performed")]
     [HarmonyPrefix]
-    // ReSharper disable once InconsistentNaming
     private static bool ListenForCommands(HUDManager __instance, ref InputAction.CallbackContext context)
     {
         if (!context.performed)
@@ -66,7 +64,9 @@ internal class CommandListener
         {
             case "!help":
             {
-                SendChatMessage("Available commands: !help, !ping, !restart, !setEvent, !events, !setcredits");
+                SendChatMessage(
+                    "Available commands: !help, !ping, !restart, !setevent, !events, !setcredits, !debug, !playmusic, !stopmusic, !audioclips"
+                );
                 return;
             }
 
@@ -77,7 +77,7 @@ internal class CommandListener
 
                 if (!GameNetworkManager.Instance.isHostingGame)
                 {
-                    SendChatMessage("Only the host can restart.");
+                    SendChatMessage("Only the host can do this.");
                     return;
                 }
 
@@ -115,7 +115,7 @@ internal class CommandListener
             {
                 if (!GameNetworkManager.Instance.isHostingGame)
                 {
-                    SendChatMessage("Only the host can set events.");
+                    SendChatMessage("Only the host can do this.");
                     return;
                 }
 
@@ -147,7 +147,7 @@ internal class CommandListener
             {
                 if (!GameNetworkManager.Instance.isHostingGame)
                 {
-                    SendChatMessage("Only the host can set credits.");
+                    SendChatMessage("Only the host can do this.");
                     return;
                 }
 
@@ -180,6 +180,68 @@ internal class CommandListener
                     })}");
 
                 SendChatMessage("Check the logs for a detailed debug message!");
+                return;
+            }
+
+            case "!playmusic":
+            {
+                if (!GameNetworkManager.Instance.isHostingGame)
+                {
+                    SendChatMessage("Only the host can do this.");
+                    return;
+                }
+
+                if (args.Length == 0)
+                {
+                    SendChatMessage("!playmusic <name> [volume] [pitch] [loop]");
+                    return;
+                }
+
+                NetworkUtils.BroadcastAll(new PacketPlayMusic
+                {
+                    Name = args[0],
+                    Volume = args.Length > 1 ? float.Parse(args[1]) : .85f,
+                    Pitch = args.Length > 2 ? float.Parse(args[2]) : 1f,
+                    Loop = args.Length > 3 && bool.Parse(args[3])
+                });
+
+                return;
+            }
+
+            case "!stopmusic":
+            {
+                if (!GameNetworkManager.Instance.isHostingGame)
+                {
+                    SendChatMessage("Only the host can do this.");
+                    return;
+                }
+
+                if (args.Length == 0)
+                {
+                    SendChatMessage("!stopmusic [shouldFadeOut] [fadeOutDuration]");
+                    return;
+                }
+
+                NetworkUtils.BroadcastAll(new PacketStopMusic
+                {
+                    FadeOut = args.Length > 0 && bool.Parse(args[0]),
+                    FadeOutDuration = args.Length > 1 ? float.Parse(args[1]) : 2f,
+                });
+
+                return;
+            }
+
+            case "!audioclips":
+            {
+                if (!GameNetworkManager.Instance.isHostingGame)
+                {
+                    SendChatMessage("Only the host can do this");
+                    return;
+                }
+
+                SendChatMessage(AudioManager.LoadedAudio.Keys.Aggregate("Audio clips: ",
+                    (current, key) => $"{current}{key}, "));
+
                 return;
             }
         }

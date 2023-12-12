@@ -1,17 +1,22 @@
-﻿using GameNetcodeStuff;
+﻿using FishsGrandAdventure.Audio;
+using FishsGrandAdventure.Utils;
+using GameNetcodeStuff;
 using UnityEngine;
 
 namespace FishsGrandAdventure.Effects;
 
 public class PlayerEffectBlazed : Effect
 {
-    private const float CooldownTime = 60f;
+    private const float CooldownTime = 90;
 
     public PlayerControllerB PlayerController;
 
     private float cooldown;
 
     private float fuelValue = 1f;
+
+    private bool musicStarted;
+    private bool musicFadingOut = true;
 
     private void Start()
     {
@@ -22,10 +27,49 @@ public class PlayerEffectBlazed : Effect
     {
         PlayerController.drunkness = 0f;
         PlayerController.drunknessInertia = 0f;
+
+        foreach (PlayerControllerB playerController in StartOfRound.Instance.allPlayerScripts)
+        {
+            if (playerController.currentVoiceChatAudioSource != null)
+            {
+                playerController.currentVoiceChatAudioSource.pitch = 1f;
+            }
+        }
+
+        AudioManager.StopMusic();
     }
 
     private void LateUpdate()
     {
+        if (PlayerController.drunkness > 0f)
+        {
+            for (var index = 0; index < StartOfRound.Instance.allPlayerScripts.Length; index++)
+            {
+                SoundManager.Instance.SetPlayerPitch(
+                    Mathf.Clamp(
+                        Mathf.Clamp(PlayerController.drunkness, 0, 8f)
+                            .Remap(0f, 8f, 1f, 2.5f),
+                        1f,
+                        2f),
+                    index);
+            }
+        }
+        else
+        {
+            for (var index = 0; index < StartOfRound.Instance.allPlayerScripts.Length; index++)
+            {
+                SoundManager.Instance.SetPlayerPitch(1f, index);
+            }
+        }
+
+        if (!musicFadingOut &&
+            AudioManager.MusicSource.isPlaying &&
+            PlayerController.drunkness <= 0.3f)
+        {
+            AudioManager.StopMusic(true, 2f);
+            musicFadingOut = true;
+        }
+
         if (cooldown > 0f)
         {
             cooldown -= Time.deltaTime;
@@ -40,6 +84,14 @@ public class PlayerEffectBlazed : Effect
                     Time.deltaTime / 1.75f * PlayerController.drunknessSpeed, 0.1f, 3f);
             PlayerController.increasingDrunknessThisFrame = true;
 
+            if (!AudioManager.MusicSource.isPlaying && !musicStarted && PlayerController.drunkness > 0.3f)
+            {
+                AudioManager.PlayMusic("earthbound_baawo", .5f);
+
+                musicStarted = true;
+                musicFadingOut = false;
+            }
+
             fuelValue -= Time.deltaTime / 22f;
         }
 
@@ -47,6 +99,8 @@ public class PlayerEffectBlazed : Effect
         {
             cooldown = CooldownTime;
             fuelValue = 1f;
+
+            musicStarted = false;
         }
     }
 }

@@ -47,7 +47,6 @@ public static class PatchSeaWorld
 {
     [HarmonyPatch(typeof(StartOfRound), "Update")]
     [HarmonyPostfix]
-    // ReSharper disable once InconsistentNaming
     private static void StartOfRoundUpdate(StartOfRound __instance)
     {
         if (GameState.CurrentGameEvent?.GameEventType != GameEventType.SeaWorld) return;

@@ -97,3 +97,19 @@ public class PacketSpawnEnemyInside : Packet
     public bool ForceInside;
     public List<Type> ComponentsToAttach;
 }
+
+[Serializable]
+public class PacketPlayMusic : Packet
+{
+    public string Name;
+    public float Volume = 1f;
+    public float Pitch = 1f;
+    public bool Loop;
+}
+
+[Serializable]
+public class PacketStopMusic : Packet
+{
+    public bool FadeOut;
+    public float FadeOutDuration = 1f;
+}
