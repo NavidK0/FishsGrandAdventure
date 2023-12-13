@@ -12,7 +12,7 @@ namespace FishsGrandAdventure.Game.Events;
 
 public class RackAndRollEvent : IGameEvent
 {
-    private static readonly List<Type> AllowedEnemyTypes = new List<Type>()
+    private static readonly List<Type> AllowedEnemyTypes = new List<Type>
     {
         typeof(BaboonBirdAI),
         typeof(CentipedeAI),
@@ -77,13 +77,14 @@ public class RackAndRollEvent : IGameEvent
             {
                 if (player.isPlayerDead || !player.isPlayerControlled) break;
 
-                player.DropAllHeldItems();
+                Vector3 playerLocation = player.NetworkObject.transform.position;
 
                 if (player.IsServer)
                 {
                     GameObject gunGo = Object.Instantiate(gunItem.spawnPrefab,
-                        GameNetworkManager.Instance.localPlayerController.transform.position,
-                        Quaternion.identity);
+                        playerLocation,
+                        Quaternion.identity
+                    );
 
                     ShotgunItem grabbable = gunGo.GetComponent<ShotgunItem>();
                     grabbable.fallTime = 0f;
@@ -96,7 +97,7 @@ public class RackAndRollEvent : IGameEvent
                     NetworkUtils.BroadcastAll(new PacketPlayMusic
                     {
                         Name = "doom_eternal",
-                        Volume = 0.6f
+                        Volume = 0.5f
                     });
 
                     // NetworkUtils.BroadcastAll(new PacketGrabItem
@@ -107,7 +108,7 @@ public class RackAndRollEvent : IGameEvent
                 }
             }
 
-            CommandListener.SendChatMessage("<color=red>Look down. Don't forget your gun. Good luck.</color>");
+            CommandListener.SendChatMessage("<color=red>Don't forget your gun. Ask your host. Good luck.</color>");
         });
     }
 

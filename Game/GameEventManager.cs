@@ -50,15 +50,6 @@ public class GameEventManager : MonoBehaviour
     private static readonly Dictionary<int, SelectableLevel>
         ClonedLevels = new Dictionary<int, SelectableLevel>();
 
-    private static readonly Dictionary<SelectableLevel, List<SpawnableItemWithRarity>> OriginalItems =
-        new Dictionary<SelectableLevel, List<SpawnableItemWithRarity>>();
-
-    private static readonly Dictionary<SelectableLevel, List<SpawnableEnemyWithRarity>> OriginalEnemies =
-        new Dictionary<SelectableLevel, List<SpawnableEnemyWithRarity>>();
-
-    private static readonly Dictionary<SelectableLevel, List<SpawnableOutsideObjectWithRarity>> OriginalOutsideObjects =
-        new Dictionary<SelectableLevel, List<SpawnableOutsideObjectWithRarity>>();
-
     private static readonly Dictionary<SpawnableEnemyWithRarity, AnimationCurve> OriginalEnemyPropCurves =
         new Dictionary<SpawnableEnemyWithRarity, AnimationCurve>();
 
@@ -222,9 +213,7 @@ public class GameEventManager : MonoBehaviour
         }
 
         // Reset the enemy spawns
-        ResetItems(newLevel);
-        ResetEnemies(newLevel);
-        ResetOutsideObjects(newLevel);
+        ResetLevelForRound(newLevel);
 
         if (newLevel.Enemies != null)
         {
@@ -362,6 +351,8 @@ public class GameEventManager : MonoBehaviour
             level.daytimeEnemySpawnChanceThroughDay = originalLevel.daytimeEnemySpawnChanceThroughDay;
             level.enemySpawnChanceThroughoutDay = originalLevel.enemySpawnChanceThroughoutDay;
         }
+
+        ResetLevelForRound(level);
     }
 
     private static void ResetEvents()
@@ -380,58 +371,13 @@ public class GameEventManager : MonoBehaviour
         StartOfRound.Instance.RefreshPlayerVoicePlaybackObjects();
     }
 
-    private static void ResetItems(SelectableLevel newLevel)
+    private static void ResetLevelForRound(SelectableLevel level)
     {
-        if (!OriginalItems.ContainsKey(newLevel))
+        if (ClonedLevels.TryGetValue(level.levelID, out SelectableLevel originalLevel))
         {
-            List<SpawnableItemWithRarity> list = new List<SpawnableItemWithRarity>();
-            foreach (SpawnableItemWithRarity item in newLevel.spawnableScrap)
-            {
-                list.Add(item);
-            }
-
-            OriginalItems.Add(newLevel, list);
-        }
-
-        OriginalItems.TryGetValue(newLevel, out List<SpawnableItemWithRarity> spawnableScrap);
-        newLevel.spawnableScrap = spawnableScrap;
-    }
-
-    private static void ResetEnemies(SelectableLevel newLevel)
-    {
-        if (!OriginalEnemies.ContainsKey(newLevel))
-        {
-            List<SpawnableEnemyWithRarity> list = new List<SpawnableEnemyWithRarity>();
-            foreach (SpawnableEnemyWithRarity item in newLevel.Enemies)
-            {
-                list.Add(item);
-            }
-
-            OriginalEnemies.Add(newLevel, list);
-        }
-
-        OriginalEnemies.TryGetValue(newLevel, out List<SpawnableEnemyWithRarity> enemies);
-        newLevel.Enemies = enemies;
-    }
-
-    private static void ResetOutsideObjects(SelectableLevel newLevel)
-    {
-        if (!OriginalOutsideObjects.ContainsKey(newLevel))
-        {
-            List<SpawnableOutsideObjectWithRarity> list = new List<SpawnableOutsideObjectWithRarity>();
-            foreach (SpawnableOutsideObjectWithRarity item in newLevel.spawnableOutsideObjects)
-            {
-                list.Add(item);
-            }
-
-            OriginalOutsideObjects.Add(newLevel, list);
-        }
-
-        OriginalOutsideObjects.TryGetValue(newLevel, out List<SpawnableOutsideObjectWithRarity> outsideObjects);
-
-        if (outsideObjects != null)
-        {
-            newLevel.spawnableOutsideObjects = outsideObjects.ToArray();
+            level.spawnableScrap = originalLevel.spawnableScrap;
+            level.Enemies = originalLevel.Enemies;
+            level.spawnableOutsideObjects = originalLevel.spawnableOutsideObjects;
         }
     }
 }

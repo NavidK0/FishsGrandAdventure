@@ -2,5 +2,8 @@
   "name": "Fish's Grand Adventure",
   "author": "NavidK0",
   "version_number": "1.1.0",
-  "description": "Private mod for the Fish Clan. Adds a bunch of \"special\" content to the game."
+  "description": "Private mod for the Fish Clan. Adds a bunch of \"special\" content to the game.",
+  "dependencies": [
+    "2018-LC_API-2.1.2"
+  ]
 }
