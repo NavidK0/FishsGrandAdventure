@@ -16,12 +16,10 @@ public static class ModInfo
 {
     public const string Guid = "FishsGrandAdventure";
     public const string Name = "Fish's Grand Adventure";
-    public const string Version = "1.2.0";
+    public const string Version = "1.2.1";
 
     public static string[] Dependencies => new[]
     {
-        "Steven-Custom_Boombox_Music-1.4.0",
-        "CodeEnder-Custom_Boombox_Fix-1.2.2",
         "steven4547466-YoutubeBoombox-1.4.1"
     };
 }
