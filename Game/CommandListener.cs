@@ -65,7 +65,7 @@ internal class CommandListener
             case "!help":
             {
                 SendChatMessage(
-                    "Available commands: !help, !ping, !restart, !setevent, !skip, !events, !setcredits, !debug, !playmusic, !stopmusic, !audioclips"
+                    "Available commands: !help, !ping, !bbv, !restart, !setevent, !skip, !events, !setcredits, !debug, !playmusic, !stopmusic, !audioclips, !settime"
                 );
                 return;
             }

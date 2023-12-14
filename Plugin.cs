@@ -6,7 +6,6 @@ using FishsGrandAdventure.Behaviors.Wendigo;
 using FishsGrandAdventure.Game;
 using FishsGrandAdventure.Game.Events;
 using FishsGrandAdventure.Network;
-using FishsGrandAdventure.Patches;
 using HarmonyLib;
 using UnityEngine;
 using NetworkTransport = FishsGrandAdventure.Network.NetworkTransport;
@@ -21,7 +20,9 @@ public static class ModInfo
 
     public static string[] Dependencies => new[]
     {
-        "Ryokune-CompatibilityChecker-1.0.5"
+        "Steven-Custom_Boombox_Music-1.4.0",
+        "CodeEnder-Custom_Boombox_Fix-1.2.2",
+        "steven4547466-YoutubeBoombox-1.4.1"
     };
 }
 
@@ -60,9 +61,6 @@ public class Plugin : BaseUnityPlugin
         harmony.PatchAll(typeof(CommandListener));
         harmony.PatchAll(typeof(CustomMoonManager));
         harmony.PatchAll(typeof(PlayerControllerBPatcher));
-
-        // Fixes
-        harmony.PatchAll(typeof(BoomboxItemSyncFix));
 
         NetworkTransport.GetString += NetworkUtils.OnMessageReceived;
     }

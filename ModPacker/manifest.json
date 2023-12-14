@@ -4,6 +4,8 @@
   "version_number": "1.2.0",
   "description": "Private mod for the Fish Clan. Adds a bunch of \"special\" content to the game.",
   "dependencies": [
-    "Ryokune-CompatibilityChecker-1.0.5"
+    "Steven-Custom_Boombox_Music-1.4.0",
+    "CodeEnder-Custom_Boombox_Fix-1.2.2",
+    "steven4547466-YoutubeBoombox-1.4.1"
   ]
 }
