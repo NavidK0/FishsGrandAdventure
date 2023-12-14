@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using FishsGrandAdventure.Network;
+using System.Linq;
+using FishsGrandAdventure.Audio;
 using FishsGrandAdventure.Utils;
 using GameNetcodeStuff;
 using HarmonyLib;
@@ -10,8 +11,11 @@ using Object = UnityEngine.Object;
 
 namespace FishsGrandAdventure.Game.Events;
 
-public class RackAndRollEvent : IGameEvent
+public class RackAndRollEvent : BaseGameEvent
 {
+    public static Terminal Terminal;
+    public static Item[] OriginalBuyableItems;
+
     private static readonly List<Type> AllowedEnemyTypes = new List<Type>
     {
         typeof(BaboonBirdAI),
@@ -27,18 +31,31 @@ public class RackAndRollEvent : IGameEvent
     };
 
     private Item gunItem;
+    private int gunTerminalTempIndex;
 
-    public string Description => "Rack and Roll";
-    public Color Color => new Color(0.97f, 0.99f, 1f);
-    public GameEventType GameEventType => GameEventType.RackAndRoll;
+    public override string Description => "Rack and Roll";
+    public override Color Color => new Color(0.97f, 0.99f, 1f);
+    public override GameEventType GameEventType => GameEventType.RackAndRoll;
 
-    public void OnServerInitialize(SelectableLevel level)
+    public override void OnServerInitialize(SelectableLevel level)
     {
+        PatchRackAndRoll.PlayedMusicOnFirstGunPickup = false;
+
         gunItem = StartOfRound.Instance.allItemsList.itemsList.Find(i => i.itemName.ToLower() == "shotgun");
+
+        Terminal = Object.FindObjectOfType<Terminal>();
+        OriginalBuyableItems = Terminal.buyableItemsList;
+        Terminal.buyableItemsList = Terminal.buyableItemsList.Append(gunItem).ToArray();
+        gunTerminalTempIndex = Terminal.buyableItemsList.Length - 1;
     }
 
-    public void OnBeforeModifyLevel(ref SelectableLevel level)
+    public override void OnPreModifyLevel(ref SelectableLevel level)
     {
+        for (var i = 0; i < GameNetworkManager.Instance.connectedPlayers; i++)
+        {
+            Terminal.orderedItemsFromTerminal.Add(gunTerminalTempIndex);
+        }
+
         ModUtils.AddSpecificEnemiesForEvent(level, new List<Type> { typeof(NutcrackerEnemyAI) });
 
         foreach (SpawnableEnemyWithRarity spawnableEnemyWithRarity in level.Enemies)
@@ -61,64 +78,54 @@ public class RackAndRollEvent : IGameEvent
         }
     }
 
-    public void OnFinishGeneratingLevel()
+    public override void OnPreFinishGeneratingLevel()
     {
-        CommandListener.SendChatMessage("<color=red>Don't pick anything up yet.</color>");
-        foreach (PlayerControllerB player in RoundManager.Instance.playersManager.allPlayerScripts)
-        {
-            if (player.isPlayerDead || !player.isPlayerControlled) break;
-
-            player.DropAllHeldItems();
-        }
-
-        Timing.CallDelayed(16f, () =>
-        {
-            foreach (PlayerControllerB player in RoundManager.Instance.playersManager.allPlayerScripts)
-            {
-                if (player.isPlayerDead || !player.isPlayerControlled) break;
-
-                Vector3 playerLocation = player.NetworkObject.transform.position;
-
-                if (player.IsServer)
-                {
-                    GameObject gunGo = Object.Instantiate(gunItem.spawnPrefab,
-                        playerLocation,
-                        Quaternion.identity
-                    );
-
-                    ShotgunItem grabbable = gunGo.GetComponent<ShotgunItem>();
-                    grabbable.fallTime = 0f;
-                    grabbable.shellsLoaded = 2;
-                    grabbable.SetScrapValue(UnityEngine.Random.Range(30, 90));
-
-                    NetworkObject gunNetObject = gunGo.GetComponent<NetworkObject>();
-                    gunNetObject.Spawn();
-
-                    NetworkUtils.BroadcastAll(new PacketPlayMusic
-                    {
-                        Name = "doom_eternal",
-                        Volume = 0.5f
-                    });
-
-                    // NetworkUtils.BroadcastAll(new PacketGrabItem
-                    // {
-                    //     ClientId = playerController.actualClientId,
-                    //     NetworkObjectId = networkObject.NetworkObjectId
-                    // });
-                }
-            }
-
-            CommandListener.SendChatMessage("<color=red>Don't forget your gun. Ask your host. Good luck.</color>");
-        });
+        CommandListener.SendChatMessage(
+            $"<color=#{new Color(0f, 0.99f, 1f).ToHex()}>Special delivery, wait for the drop ship!</color>"
+        );
     }
 
-    public void Cleanup()
+    public override void Cleanup()
     {
+        Terminal.buyableItemsList = OriginalBuyableItems;
     }
 }
 
 internal class PatchRackAndRoll
 {
+    public static bool PlayedMusicOnFirstGunPickup;
+
+    [HarmonyPatch(typeof(ItemDropship), "ShipLeave")]
+    [HarmonyPostfix]
+    private static void ItemDropshipShipLeave()
+    {
+        if (GameState.CurrentGameEvent?.GameEventType != GameEventType.RackAndRoll) return;
+
+        RackAndRollEvent.Terminal.buyableItemsList = RackAndRollEvent.OriginalBuyableItems;
+    }
+
+    [HarmonyPatch(typeof(PlayerControllerB), "GrabObjectServerRpc")]
+    [HarmonyPostfix]
+    private static void GrabObjectServerRpc(ref NetworkObjectReference grabbedObject)
+    {
+        if (GameState.CurrentGameEvent?.GameEventType != GameEventType.RackAndRoll) return;
+
+        if (!PlayedMusicOnFirstGunPickup && grabbedObject.TryGet(out NetworkObject networkedObject))
+        {
+            GrabbableObject grabbableObject = networkedObject.GetComponent<GrabbableObject>();
+            bool isShotgun = grabbableObject.itemProperties.itemName.ToLower() == "shotgun";
+
+            if (isShotgun)
+            {
+                AudioManager.PlayMusic("doom_eternal", 0.5f);
+
+                CommandListener.SendChatMessage("<color=red>Give 'em HELL!</color>");
+
+                PlayedMusicOnFirstGunPickup = true;
+            }
+        }
+    }
+
     [HarmonyPatch(typeof(ShotgunItem), "ItemActivate")]
     [HarmonyPostfix]
     public static void PatchItemActivate(ShotgunItem __instance)

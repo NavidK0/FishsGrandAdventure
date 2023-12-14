@@ -2,26 +2,14 @@
 
 namespace FishsGrandAdventure.Game.Events;
 
-public class HorribleDayEvent : IGameEvent
+public class HorribleDayEvent : BaseGameEvent
 {
-    public string Description => "What a Horrible Night to Have a Curse";
-    public Color Color => Color.red;
-    public GameEventType GameEventType => GameEventType.HorribleDay;
+    public override string Description => "What a Horrible Night to Have a Curse";
+    public override Color Color => Color.red;
+    public override GameEventType GameEventType => GameEventType.HorribleDay;
 
-    public void OnServerInitialize(SelectableLevel level)
-    {
-    }
-
-    public void OnBeforeModifyLevel(ref SelectableLevel level)
-    {
-    }
-
-    public void OnFinishGeneratingLevel()
+    public override void OnPreFinishGeneratingLevel()
     {
         ClientHelper.SetWeather(LevelWeatherType.Eclipsed);
-    }
-
-    public void Cleanup()
-    {
     }
 }

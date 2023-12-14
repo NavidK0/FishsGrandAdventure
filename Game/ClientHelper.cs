@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using FishsGrandAdventure.Effects;
+using FishsGrandAdventure.Behaviors;
 using GameNetcodeStuff;
 using UnityEngine;
 
@@ -20,6 +20,7 @@ public static class ClientHelper
         {
             if (rw.weatherType == roundManager.currentLevel.currentWeather)
             {
+                TimeOfDay.Instance.currentLevelWeather = rw.weatherType;
                 TimeOfDay.Instance.currentWeatherVariable = rw.weatherVariable;
                 TimeOfDay.Instance.currentWeatherVariable2 = rw.weatherVariable2;
             }

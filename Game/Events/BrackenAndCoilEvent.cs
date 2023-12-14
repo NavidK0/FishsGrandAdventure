@@ -1,19 +1,21 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Collections.Generic;
+using FishsGrandAdventure.Utils;
+using UnityEngine;
 
 namespace FishsGrandAdventure.Game.Events;
 
-public class BrackenAndCoilEvent : IGameEvent
+public class BrackenAndCoilEvent : BaseGameEvent
 {
-    public string Description => "Bracken and Coil";
-    public Color Color => new Color(1f, 0f, 0.32f);
-    public GameEventType GameEventType => GameEventType.BrackenAndCoil;
+    public override string Description => "Bracken and Coil";
+    public override Color Color => new Color(1f, 0f, 0.32f);
+    public override GameEventType GameEventType => GameEventType.BrackenAndCoil;
 
-    public void OnServerInitialize(SelectableLevel level)
+    public override void OnPreModifyLevel(ref SelectableLevel level)
     {
-    }
+        ModUtils.AddSpecificEnemiesForEvent(level, new List<Type> { typeof(FlowermanAI) });
+        ModUtils.AddSpecificEnemiesForEvent(level, new List<Type> { typeof(SpringManAI) });
 
-    public void OnBeforeModifyLevel(ref SelectableLevel level)
-    {
         foreach (SpawnableEnemyWithRarity spawnableEnemyWithRarity in level.Enemies)
         {
             spawnableEnemyWithRarity.rarity = 0;
@@ -21,6 +23,7 @@ public class BrackenAndCoilEvent : IGameEvent
             if (spawnableEnemyWithRarity.enemyType.enemyPrefab.GetComponent<FlowermanAI>() != null)
             {
                 spawnableEnemyWithRarity.rarity = 100;
+                spawnableEnemyWithRarity.enemyType.MaxCount = 4;
             }
 
             if (spawnableEnemyWithRarity.enemyType.enemyPrefab.GetComponent<SpringManAI>() != null)
@@ -28,13 +31,5 @@ public class BrackenAndCoilEvent : IGameEvent
                 spawnableEnemyWithRarity.rarity = 100;
             }
         }
-    }
-
-    public void OnFinishGeneratingLevel()
-    {
-    }
-
-    public void Cleanup()
-    {
     }
 }

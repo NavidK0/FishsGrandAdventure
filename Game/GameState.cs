@@ -5,7 +5,7 @@ namespace FishsGrandAdventure.Game;
 
 public static class GameState
 {
-    [CanBeNull] public static IGameEvent CurrentGameEvent;
+    [CanBeNull] public static BaseGameEvent CurrentGameEvent;
 
     public static GameEventType? ForceLoadEvent = GameEventType.None;
     public static float? ForcePlayerMovementSpeed = null;

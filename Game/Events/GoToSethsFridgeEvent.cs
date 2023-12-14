@@ -2,13 +2,13 @@
 
 namespace FishsGrandAdventure.Game.Events;
 
-public class SethsFridgeEvent : IGameEvent
+public class GoToSethsFridgeEvent : BaseGameEvent
 {
-    public string Description => "Free luxury vacation to Seth's Fridge!";
-    public Color Color => Color.cyan;
-    public GameEventType GameEventType => GameEventType.SethsFridge;
+    public override string Description => "Free luxury vacation to Seth's Fridge! Enjoy your stay!";
+    public override Color Color => Color.cyan;
+    public override GameEventType GameEventType => GameEventType.GoToSethsFridge;
 
-    public void OnServerInitialize(SelectableLevel level)
+    public override void OnServerInitialize(SelectableLevel level)
     {
         int groupCredits = Object.FindObjectOfType<Terminal>().groupCredits;
 
@@ -17,17 +17,5 @@ public class SethsFridgeEvent : IGameEvent
         StartOfRound.Instance.SetMapScreenInfoToCurrentLevel();
 
         StartOfRound.Instance.ChangeLevelClientRpc(CustomMoonManager.SethsFridgeLevel.levelID, groupCredits);
-    }
-
-    public void OnBeforeModifyLevel(ref SelectableLevel level)
-    {
-    }
-
-    public void OnFinishGeneratingLevel()
-    {
-    }
-
-    public void Cleanup()
-    {
     }
 }

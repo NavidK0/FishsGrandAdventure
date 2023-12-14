@@ -13,7 +13,7 @@ var manifestObject = new
     author = "NavidK0",
     version_number = ModInfo.Version,
     description = "Private mod for the Fish Clan. Adds a bunch of \"special\" content to the game.",
-    dependencies = new[] { "2018-LC_API-2.1.2" },
+    dependencies = ModInfo.Dependencies,
 };
 
 string jsonObject = JsonConvert.SerializeObject(manifestObject, Formatting.Indented);

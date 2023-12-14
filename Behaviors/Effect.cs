@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace FishsGrandAdventure.Effects;
+namespace FishsGrandAdventure.Behaviors;
 
 public abstract class Effect : MonoBehaviour
 {

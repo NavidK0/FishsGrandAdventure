@@ -10,8 +10,6 @@ public enum GameEventType
 
     Hoarding,
 
-    Bullshit,
-
     SnareFleas,
 
     BrackenAndCoil,
@@ -28,7 +26,9 @@ public enum GameEventType
 
     All,
 
-    SethsFridge,
+    GoToSethsFridge,
+
+    GoToTitan,
 
     NiceDay,
 
@@ -50,5 +50,7 @@ public enum GameEventType
 
     ThespianSociety,
 
-    RackAndRoll
+    RackAndRoll,
+
+    Wendigo
 }

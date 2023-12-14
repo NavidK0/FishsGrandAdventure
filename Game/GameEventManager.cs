@@ -4,7 +4,6 @@ using FishsGrandAdventure.Game.Events;
 using FishsGrandAdventure.Network;
 using FishsGrandAdventure.Utils;
 using HarmonyLib;
-using Newtonsoft.Json;
 using UnityEngine;
 
 namespace FishsGrandAdventure.Game;
@@ -13,14 +12,13 @@ public class GameEventManager : MonoBehaviour
 {
     public const float DefaultMovementSpeed = 4.6f;
 
-    public static readonly List<IGameEvent> EnabledEvents = new List<IGameEvent>
+    public static readonly List<BaseGameEvent> EnabledEvents = new List<BaseGameEvent>
     {
-        // Standard events (server-side)
+        // Standard original Brutal-company based events
         new NoneEvent(),
         new TurretEvent(),
         new LandmineEvent(),
         new HoardingEvent(),
-        new BullshitEvent(),
         new SnareFleasEvent(),
         new BrackenAndCoilEvent(),
         new ChaosEvent(),
@@ -29,29 +27,39 @@ public class GameEventManager : MonoBehaviour
         new PsychosisEvent(),
         new DangerResetEvent(),
         new AllEvent(),
-        new ThespianSocietyEvent(),
 
-        // Special events
-        new SethsFridgeEvent(),
+        // Travel special events
+        new GoToSethsFridgeEvent(),
+        new GoToTitanEvent(),
+
+        // Time/weather events
         new NiceDayEvent(),
         new HorribleDayEvent(),
         new LongDayEvent(),
         new ShortDayEvent(),
+
+        // Unique/Minigame style events
+        new ThespianSocietyEvent(),
         new BlazeIt420Event(),
         new SeaWorldEvent(),
         new SpeedRunEvent(),
         new ClownWorldEvent(),
         new ClownExpoEvent(),
-        new RackAndRollEvent()
+        new RackAndRollEvent(),
+        new WendigoEvent(),
     };
 
-    private static readonly Dictionary<SelectableLevel, float> DangerLevels = new Dictionary<SelectableLevel, float>();
+    public static readonly Dictionary<SelectableLevel, float> DangerLevels = new Dictionary<SelectableLevel, float>();
 
-    private static readonly Dictionary<int, SelectableLevel>
-        ClonedLevels = new Dictionary<int, SelectableLevel>();
+    private static Queue<BaseGameEvent> EventQueue = new Queue<BaseGameEvent>();
 
-    private static readonly Dictionary<SpawnableEnemyWithRarity, AnimationCurve> OriginalEnemyPropCurves =
-        new Dictionary<SpawnableEnemyWithRarity, AnimationCurve>();
+    private static readonly Dictionary<int, SelectableLevel> ClonedLevels = new Dictionary<int, SelectableLevel>();
+
+    private static readonly Dictionary<int, EnemyType> ClonedEnemyTypes = new Dictionary<int, EnemyType>();
+    private static readonly Dictionary<int, EnemyType> ClonedOutsideEnemyTypes = new Dictionary<int, EnemyType>();
+    private static readonly Dictionary<int, EnemyType> ClonedDaytimeEnemyTypes = new Dictionary<int, EnemyType>();
+
+    private static readonly Dictionary<int, Item> ClonedItems = new Dictionary<int, Item>();
 
     private static Terminal terminal;
 
@@ -141,8 +149,15 @@ public class GameEventManager : MonoBehaviour
         }
         else
         {
-            GameState.CurrentGameEvent =
-                EnabledEvents.GetRandomElement();
+            if (EventQueue.IsNullOrEmpty())
+            {
+                var clonedList = new List<BaseGameEvent>(EnabledEvents);
+                clonedList.Shuffle();
+
+                EventQueue = new Queue<BaseGameEvent>(clonedList);
+            }
+
+            GameState.CurrentGameEvent = EventQueue.Dequeue();
         }
 
         if (StartOfRound.Instance.currentLevel.sceneName == "CompanyBuilding")
@@ -159,10 +174,8 @@ public class GameEventManager : MonoBehaviour
 
             SelectableLevel newLevel = RoundManager.Instance.currentLevel;
 
-            if (!ClonedLevels.ContainsKey(newLevel.levelID))
-            {
-                ClonedLevels.Add(newLevel.levelID, Instantiate(newLevel));
-            }
+            // Reset the enemy spawns
+            ResetLevelForRound(newLevel);
 
             HUDManager.Instance.AddTextToChatOnServer(
                 $"<color=#{GameState.CurrentGameEvent.Color.ToHex()}>Event: {GameState.CurrentGameEvent.Description}</color>"
@@ -174,7 +187,7 @@ public class GameEventManager : MonoBehaviour
 
     [HarmonyPatch(typeof(RoundManager), "LoadNewLevel")]
     [HarmonyPrefix]
-    private static bool ModifyLevel(ref SelectableLevel newLevel)
+    private static bool ModifyLevel(ref int randomSeed, ref SelectableLevel newLevel)
     {
         if (!RoundManager.Instance.IsServer)
             return true;
@@ -187,16 +200,37 @@ public class GameEventManager : MonoBehaviour
         foreach (SelectableLevel key in DangerLevels.Keys.ToList())
         {
             DangerLevels.TryGetValue(key, out float num);
-            DangerLevels[key] = Mathf.Clamp(num - 5f, 0f, 100f);
 
-            if (GameState.CurrentGameEvent?.GameEventType == GameEventType.DangerReset |
-                GameState.CurrentGameEvent?.GameEventType == GameEventType.All)
+            if (key.levelID != newLevel.levelID)
             {
-                DangerLevels[key] = 0f;
+                DangerLevels[key] = Mathf.Clamp(num - 5f, 0f, 100f);
             }
         }
 
         DangerLevels.TryGetValue(newLevel, out float dangerLevel);
+
+        newLevel.maxScrap += 45;
+        newLevel.maxTotalScrapValue += 800;
+        newLevel.daytimeEnemySpawnChanceThroughDay =
+            new AnimationCurve(new Keyframe(0f, 7f), new Keyframe(0.5f, 7f));
+        newLevel.maxEnemyPowerCount += 2000;
+        newLevel.maxOutsideEnemyPowerCount += 20;
+        newLevel.maxDaytimeEnemyPowerCount += 200;
+
+        newLevel.enemySpawnChanceThroughoutDay = new AnimationCurve(
+            new Keyframe(0f, 0.1f + dangerLevel),
+            new Keyframe(0.5f, 500f + dangerLevel)
+        );
+
+        DangerLevels[newLevel] = Mathf.Clamp(dangerLevel + 20f, 0f, 100f);
+
+        Terminal.groupCredits += 120;
+        Terminal.SyncGroupCreditsServerRpc(Terminal.groupCredits, Terminal.numberOfItemsInDropship);
+
+        if (GameState.CurrentGameEvent != null)
+        {
+            GameState.CurrentGameEvent.OnPreModifyLevel(ref newLevel);
+        }
 
         HUDManager.Instance.AddTextToChatOnServer(
             "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
@@ -212,32 +246,17 @@ public class GameEventManager : MonoBehaviour
             );
         }
 
-        // Reset the enemy spawns
-        ResetLevelForRound(newLevel);
+        return true;
+    }
 
-        if (newLevel.Enemies != null)
-        {
-            foreach (SpawnableEnemyWithRarity enemy in newLevel.Enemies)
-            {
-                if (!OriginalEnemyPropCurves.ContainsKey(enemy))
-                {
-                    OriginalEnemyPropCurves.Add(enemy,
-                        enemy.enemyType.probabilityCurve);
-                }
-
-                OriginalEnemyPropCurves.TryGetValue(enemy, out AnimationCurve probabilityCurve);
-                enemy.enemyType.probabilityCurve = probabilityCurve;
-            }
-        }
-
+    [HarmonyPatch(typeof(RoundManager), "LoadNewLevel")]
+    [HarmonyPostfix]
+    private static void PostModifyLevel(int randomSeed, SelectableLevel newLevel)
+    {
         if (GameState.CurrentGameEvent != null)
         {
-            GameState.CurrentGameEvent.OnBeforeModifyLevel(ref newLevel);
+            GameState.CurrentGameEvent.OnPostModifyLevel(randomSeed, newLevel);
         }
-
-        AddBaseModifiers(newLevel, dangerLevel);
-
-        return true;
     }
 
     [HarmonyPatch(typeof(StartOfRound), "ShipHasLeft")]
@@ -251,7 +270,14 @@ public class GameEventManager : MonoBehaviour
     [HarmonyPrefix]
     private static void OnFinishGeneratingLevel()
     {
-        GameState.CurrentGameEvent?.OnFinishGeneratingLevel();
+        GameState.CurrentGameEvent?.OnPreFinishGeneratingLevel();
+    }
+
+    [HarmonyPatch(typeof(RoundManager), "FinishGeneratingLevel")]
+    [HarmonyPostfix]
+    private static void OnPostFinishGeneratingLevel()
+    {
+        GameState.CurrentGameEvent?.OnPostFinishGeneratingLevel();
 
         if (RoundManager.Instance.IsServer && GameState.CurrentGameEvent?.GameEventType != GameEventType.None)
         {
@@ -261,98 +287,6 @@ public class GameEventManager : MonoBehaviour
                 Body = GameState.CurrentGameEvent?.Description ?? "<unknown>"
             });
         }
-    }
-
-    private static void AddBaseModifiers(SelectableLevel selectableLevel, float dangerLevel)
-    {
-        foreach (SpawnableMapObject spawnableMapObject in selectableLevel.spawnableMapObjects)
-        {
-            if (spawnableMapObject.prefabToSpawn.GetComponentInChildren<Turret>() != null)
-            {
-                if (GameState.CurrentGameEvent?.GameEventType == GameEventType.Turret |
-                    GameState.CurrentGameEvent?.GameEventType == GameEventType.All)
-                {
-                    spawnableMapObject.numberToSpawn =
-                        new AnimationCurve(new Keyframe(0f, 200f), new Keyframe(1f, 25f));
-                }
-                else
-                {
-                    spawnableMapObject.numberToSpawn =
-                        new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(1f, 10f));
-                }
-            }
-            else if (spawnableMapObject.prefabToSpawn.GetComponentInChildren<Landmine>() != null)
-            {
-                if (GameState.CurrentGameEvent?.GameEventType == GameEventType.Landmine |
-                    GameState.CurrentGameEvent?.GameEventType == GameEventType.All)
-                {
-                    spawnableMapObject.numberToSpawn =
-                        new AnimationCurve(new Keyframe(0f, 175f), new Keyframe(1f, 150f));
-                }
-                else
-                {
-                    spawnableMapObject.numberToSpawn =
-                        new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(1f, 70f));
-                }
-            }
-
-            Plugin.Log.LogInfo(spawnableMapObject.prefabToSpawn.ToString());
-        }
-
-        Plugin.Log.LogInfo("SelectableLevel Debug: \n" +
-                           JsonConvert.SerializeObject(selectableLevel, NetworkUtils.SerializerSettings));
-
-        selectableLevel.maxScrap += 45;
-        selectableLevel.maxTotalScrapValue += 800;
-        selectableLevel.daytimeEnemySpawnChanceThroughDay =
-            new AnimationCurve(new Keyframe(0f, 7f), new Keyframe(0.5f, 7f));
-        selectableLevel.maxEnemyPowerCount += 2000;
-        selectableLevel.maxOutsideEnemyPowerCount += 20;
-        selectableLevel.maxDaytimeEnemyPowerCount += 200;
-
-        selectableLevel.enemySpawnChanceThroughoutDay = new AnimationCurve(
-            new Keyframe(0f, 0.1f + dangerLevel),
-            new Keyframe(0.5f, 500f + dangerLevel)
-        );
-
-        if (GameState.CurrentGameEvent?.GameEventType == GameEventType.Hoarding ||
-            GameState.CurrentGameEvent?.GameEventType == GameEventType.All)
-        {
-            selectableLevel.enemySpawnChanceThroughoutDay =
-                new AnimationCurve(new Keyframe(0f, 500f + dangerLevel));
-        }
-
-        if (GameState.CurrentGameEvent?.GameEventType == GameEventType.Chaos ||
-            GameState.CurrentGameEvent?.GameEventType == GameEventType.All)
-        {
-            selectableLevel.enemySpawnChanceThroughoutDay =
-                new AnimationCurve(new Keyframe(0f, 500f + dangerLevel));
-        }
-
-        DangerLevels.TryGetValue(selectableLevel, out dangerLevel);
-        DangerLevels[selectableLevel] = Mathf.Clamp(dangerLevel + 20f, 0f, 100f);
-
-        Terminal.groupCredits += 120;
-        Terminal.SyncGroupCreditsServerRpc(Terminal.groupCredits, Terminal.numberOfItemsInDropship);
-    }
-
-    private static void ResetLevel(SelectableLevel level)
-    {
-        if (ClonedLevels.TryGetValue(level.levelID, out SelectableLevel originalLevel))
-        {
-            level.spawnableMapObjects = originalLevel.spawnableMapObjects;
-
-            level.minScrap = originalLevel.minScrap;
-            level.maxScrap = originalLevel.maxScrap;
-            level.maxEnemyPowerCount = originalLevel.maxEnemyPowerCount;
-            level.maxOutsideEnemyPowerCount = originalLevel.maxEnemyPowerCount;
-            level.maxDaytimeEnemyPowerCount = originalLevel.maxDaytimeEnemyPowerCount;
-
-            level.daytimeEnemySpawnChanceThroughDay = originalLevel.daytimeEnemySpawnChanceThroughDay;
-            level.enemySpawnChanceThroughoutDay = originalLevel.enemySpawnChanceThroughoutDay;
-        }
-
-        ResetLevelForRound(level);
     }
 
     private static void ResetEvents()
@@ -371,13 +305,99 @@ public class GameEventManager : MonoBehaviour
         StartOfRound.Instance.RefreshPlayerVoicePlaybackObjects();
     }
 
-    private static void ResetLevelForRound(SelectableLevel level)
+    private static void ResetLevel(SelectableLevel level)
     {
         if (ClonedLevels.TryGetValue(level.levelID, out SelectableLevel originalLevel))
         {
-            level.spawnableScrap = originalLevel.spawnableScrap;
-            level.Enemies = originalLevel.Enemies;
-            level.spawnableOutsideObjects = originalLevel.spawnableOutsideObjects;
+            level.minScrap = originalLevel.minScrap;
+            level.maxScrap = originalLevel.maxScrap;
+            level.maxEnemyPowerCount = originalLevel.maxEnemyPowerCount;
+            level.maxOutsideEnemyPowerCount = originalLevel.maxEnemyPowerCount;
+            level.maxDaytimeEnemyPowerCount = originalLevel.maxDaytimeEnemyPowerCount;
+
+            level.daytimeEnemySpawnChanceThroughDay = originalLevel.daytimeEnemySpawnChanceThroughDay;
+            level.enemySpawnChanceThroughoutDay = originalLevel.enemySpawnChanceThroughoutDay;
+        }
+
+        ResetLevelForRound(level);
+    }
+
+    private static void ResetLevelForRound(SelectableLevel level)
+    {
+        if (!ClonedLevels.ContainsKey(level.levelID))
+        {
+            ClonedLevels.Add(level.levelID, Instantiate(level));
+        }
+
+        if (ClonedLevels.TryGetValue(level.levelID, out SelectableLevel originalLevel))
+        {
+            ModUtils.CopyLevelProperties(ref level, originalLevel);
+        }
+
+        if (level.Enemies != null)
+        {
+            foreach (SpawnableEnemyWithRarity enemy in level.Enemies)
+            {
+                if (!ClonedEnemyTypes.ContainsKey(enemy.enemyType.GetInstanceID()))
+                {
+                    ClonedEnemyTypes.Add(enemy.enemyType.GetInstanceID(), Instantiate(enemy.enemyType));
+                }
+
+                if (ClonedEnemyTypes.TryGetValue(enemy.enemyType.GetInstanceID(), out EnemyType originalEnemyType))
+                {
+                    ModUtils.CopyEnemyTypeProperties(ref enemy.enemyType, originalEnemyType);
+                }
+            }
+        }
+
+        if (level.OutsideEnemies != null)
+        {
+            foreach (SpawnableEnemyWithRarity enemy in level.OutsideEnemies)
+            {
+                if (!ClonedOutsideEnemyTypes.ContainsKey(enemy.enemyType.GetInstanceID()))
+                {
+                    ClonedOutsideEnemyTypes.Add(enemy.enemyType.GetInstanceID(), Instantiate(enemy.enemyType));
+                }
+
+                if (ClonedOutsideEnemyTypes.TryGetValue(enemy.enemyType.GetInstanceID(),
+                        out EnemyType originalEnemyType))
+                {
+                    ModUtils.CopyEnemyTypeProperties(ref enemy.enemyType, originalEnemyType);
+                }
+            }
+        }
+
+        if (level.DaytimeEnemies != null)
+        {
+            foreach (SpawnableEnemyWithRarity enemy in level.DaytimeEnemies)
+            {
+                if (!ClonedDaytimeEnemyTypes.ContainsKey(enemy.enemyType.GetInstanceID()))
+                {
+                    ClonedDaytimeEnemyTypes.Add(enemy.enemyType.GetInstanceID(), Instantiate(enemy.enemyType));
+                }
+
+                if (ClonedDaytimeEnemyTypes.TryGetValue(enemy.enemyType.GetInstanceID(),
+                        out EnemyType originalEnemyType))
+                {
+                    ModUtils.CopyEnemyTypeProperties(ref enemy.enemyType, originalEnemyType);
+                }
+            }
+        }
+
+        if (level.spawnableScrap != null)
+        {
+            foreach (SpawnableItemWithRarity item in level.spawnableScrap)
+            {
+                if (!ClonedItems.ContainsKey(item.spawnableItem.GetInstanceID()))
+                {
+                    ClonedItems.Add(item.spawnableItem.GetInstanceID(), Instantiate(item.spawnableItem));
+                }
+
+                if (ClonedItems.TryGetValue(item.spawnableItem.GetInstanceID(), out Item originalItem))
+                {
+                    ModUtils.CopyItemProperties(ref item.spawnableItem, originalItem);
+                }
+            }
         }
     }
 }

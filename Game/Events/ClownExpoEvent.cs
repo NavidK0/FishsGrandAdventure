@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using FishsGrandAdventure.Effects;
+using FishsGrandAdventure.Behaviors;
 using FishsGrandAdventure.Network;
 using FishsGrandAdventure.Utils;
 using GameNetcodeStuff;
@@ -11,7 +11,7 @@ using UnityEngine;
 
 namespace FishsGrandAdventure.Game.Events;
 
-public class ClownExpoEvent : IGameEvent
+public class ClownExpoEvent : BaseGameEvent
 {
     public const int MaxOutdoorJesters = 16;
 
@@ -32,15 +32,11 @@ public class ClownExpoEvent : IGameEvent
         "Baguette!",
     };
 
-    public string Description => $"Welcome to Clown Expo {DateTime.Today.Year}!";
-    public Color Color => new Color32(252, 10, 0, 255);
-    public GameEventType GameEventType => GameEventType.ClownExpo;
+    public override string Description => $"Welcome to Clown Expo {DateTime.Today.Year}!";
+    public override Color Color => new Color32(252, 10, 0, 255);
+    public override GameEventType GameEventType => GameEventType.ClownExpo;
 
-    public void OnServerInitialize(SelectableLevel level)
-    {
-    }
-
-    public void OnBeforeModifyLevel(ref SelectableLevel level)
+    public override void OnPreModifyLevel(ref SelectableLevel level)
     {
         ModUtils.AddSpecificItemsForEvent(level, new List<string> { "cash register", "airhorn", "clown horn" });
         ModUtils.AddSpecificEnemiesForEvent(level, new List<Type> { typeof(JesterAI) });
@@ -70,14 +66,6 @@ public class ClownExpoEvent : IGameEvent
                 spawnableEnemyWithRarity.rarity = 0;
             }
         }
-    }
-
-    public void OnFinishGeneratingLevel()
-    {
-    }
-
-    public void Cleanup()
-    {
     }
 }
 

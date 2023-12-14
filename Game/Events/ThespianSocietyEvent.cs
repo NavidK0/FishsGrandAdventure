@@ -5,17 +5,13 @@ using UnityEngine;
 
 namespace FishsGrandAdventure.Game.Events;
 
-public class ThespianSocietyEvent : IGameEvent
+public class ThespianSocietyEvent : BaseGameEvent
 {
-    public string Description => "Thespian Society";
-    public Color Color => new Color(1f, 0f, 0.73f);
-    public GameEventType GameEventType => GameEventType.ThespianSociety;
+    public override string Description => "Thespian Society";
+    public override Color Color => new Color(1f, 0f, 0.73f);
+    public override GameEventType GameEventType => GameEventType.ThespianSociety;
 
-    public void OnServerInitialize(SelectableLevel level)
-    {
-    }
-
-    public void OnBeforeModifyLevel(ref SelectableLevel level)
+    public override void OnPreModifyLevel(ref SelectableLevel level)
     {
         ModUtils.AddSpecificEnemiesForEvent(level, new List<Type> { typeof(MaskedPlayerEnemy) });
 
@@ -26,13 +22,5 @@ public class ThespianSocietyEvent : IGameEvent
 
             spawnableEnemyWithRarity.rarity = enemy != null ? 999 : 0;
         }
-    }
-
-    public void OnFinishGeneratingLevel()
-    {
-    }
-
-    public void Cleanup()
-    {
     }
 }

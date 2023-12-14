@@ -9,11 +9,10 @@ namespace FishsGrandAdventure.Game;
 
 public static class CustomMoonManager
 {
-    public static int BaseLevelId;
-
     public static SelectableLevel SethsFridgeLevel;
 
-    public static bool Loaded;
+    private static int BaseLevelId;
+    private static bool Loaded;
 
     [UsedImplicitly]
     public static readonly List<SelectableLevel> OriginalLevels = new List<SelectableLevel>();
@@ -51,6 +50,8 @@ public static class CustomMoonManager
             "You (probably) won't regret it!\n",
             "Please enjoy your stay!"
         );
+
+        Loaded = true;
     }
 
     [HarmonyPatch(typeof(StartOfRound), "OnDestroy")]

@@ -2,25 +2,9 @@
 
 namespace FishsGrandAdventure.Game.Events;
 
-public class NoneEvent : IGameEvent
+public class NoneEvent : BaseGameEvent
 {
-    public string Description => "None";
-    public Color Color => Color.green;
-    public GameEventType GameEventType => GameEventType.None;
-
-    public void OnServerInitialize(SelectableLevel level)
-    {
-    }
-
-    public void OnBeforeModifyLevel(ref SelectableLevel level)
-    {
-    }
-
-    public void OnFinishGeneratingLevel()
-    {
-    }
-
-    public void Cleanup()
-    {
-    }
+    public override string Description => "None";
+    public override Color Color => Color.green;
+    public override GameEventType GameEventType => GameEventType.None;
 }

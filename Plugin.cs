@@ -2,12 +2,14 @@
 using BepInEx;
 using BepInEx.Logging;
 using FishsGrandAdventure.Audio;
+using FishsGrandAdventure.Behaviors.Wendigo;
 using FishsGrandAdventure.Game;
 using FishsGrandAdventure.Game.Events;
 using FishsGrandAdventure.Network;
 using FishsGrandAdventure.Patches;
 using HarmonyLib;
 using UnityEngine;
+using NetworkTransport = FishsGrandAdventure.Network.NetworkTransport;
 
 namespace FishsGrandAdventure;
 
@@ -15,7 +17,12 @@ public static class ModInfo
 {
     public const string Guid = "FishsGrandAdventure";
     public const string Name = "Fish's Grand Adventure";
-    public const string Version = "1.1.0";
+    public const string Version = "1.2.0";
+
+    public static string[] Dependencies => new[]
+    {
+        "Ryokune-CompatibilityChecker-1.0.5"
+    };
 }
 
 [BepInPlugin(ModInfo.Guid, ModInfo.Name, ModInfo.Version)]
@@ -54,6 +61,9 @@ public class Plugin : BaseUnityPlugin
         harmony.PatchAll(typeof(CustomMoonManager));
         harmony.PatchAll(typeof(PlayerControllerBPatcher));
 
+        // Fixes
+        harmony.PatchAll(typeof(BoomboxItemSyncFix));
+
         NetworkTransport.GetString += NetworkUtils.OnMessageReceived;
     }
 
@@ -72,6 +82,12 @@ public class Plugin : BaseUnityPlugin
             DontDestroyOnLoad(audioManagerGo);
 
             Log.LogInfo("Added AudioManager");
+
+            var wendigoGo = new GameObject("FishsGrandAdventure.WendigoRecorder");
+            wendigoGo.AddComponent<WendigoRecorder>();
+            DontDestroyOnLoad(wendigoGo);
+
+            Log.LogInfo("Added WendigoRecorder");
 
             loaded = true;
 

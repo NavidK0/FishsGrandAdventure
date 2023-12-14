@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
 using FishsGrandAdventure.Utils;
 using JetBrains.Annotations;
 using UnityEngine;
@@ -19,6 +17,8 @@ public class AudioManager : MonoBehaviour
     {
         MusicSource = gameObject.AddComponent<AudioSource>();
         MusicSource.bypassReverbZones = true;
+        MusicSource.bypassListenerEffects = true;
+        MusicSource.bypassEffects = true;
         MusicSource.reverbZoneMix = 0;
         MusicSource.spatialBlend = 0;
         MusicSource.spatialize = false;
@@ -34,6 +34,8 @@ public class AudioManager : MonoBehaviour
             Debug.LogError($"AudioManager: Could not find audio clip with name {name}");
             return;
         }
+
+        MusicSource.Stop();
 
         MusicSource.clip = LoadedAudio[name];
         MusicSource.volume = volume;

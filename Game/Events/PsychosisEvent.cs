@@ -1,19 +1,20 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Collections.Generic;
+using FishsGrandAdventure.Utils;
+using UnityEngine;
 
 namespace FishsGrandAdventure.Game.Events;
 
-public class PsychosisEvent : IGameEvent
+public class PsychosisEvent : BaseGameEvent
 {
-    public string Description => "It's not psychosis.";
-    public Color Color => new Color(0.53f, 0f, 0.06f);
-    public GameEventType GameEventType => GameEventType.Psychosis;
+    public override string Description => "It's not psychosis.";
+    public override Color Color => new Color(0.53f, 0f, 0.06f);
+    public override GameEventType GameEventType => GameEventType.Psychosis;
 
-    public void OnServerInitialize(SelectableLevel level)
+    public override void OnPreModifyLevel(ref SelectableLevel level)
     {
-    }
+        ModUtils.AddSpecificEnemiesForEvent(level, new List<Type> { typeof(DressGirlAI) });
 
-    public void OnBeforeModifyLevel(ref SelectableLevel level)
-    {
         foreach (SpawnableEnemyWithRarity spawnableEnemyWithRarity in level.Enemies)
         {
             DressGirlAI dressGirlAI =
@@ -23,13 +24,5 @@ public class PsychosisEvent : IGameEvent
                 spawnableEnemyWithRarity.rarity = 9999;
             }
         }
-    }
-
-    public void OnFinishGeneratingLevel()
-    {
-    }
-
-    public void Cleanup()
-    {
     }
 }

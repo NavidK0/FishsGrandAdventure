@@ -2,26 +2,14 @@
 
 namespace FishsGrandAdventure.Game.Events;
 
-public class NiceDayEvent : IGameEvent
+public class NiceDayEvent : BaseGameEvent
 {
-    public string Description => "Have a Nice Day! :)";
-    public Color Color => Color.green;
-    public GameEventType GameEventType => GameEventType.NiceDay;
+    public override string Description => "Have a Nice Day! :)";
+    public override Color Color => Color.green;
+    public override GameEventType GameEventType => GameEventType.NiceDay;
 
-    public void OnServerInitialize(SelectableLevel level)
-    {
-    }
-
-    public void OnBeforeModifyLevel(ref SelectableLevel level)
-    {
-    }
-
-    public void OnFinishGeneratingLevel()
+    public override void OnPreFinishGeneratingLevel()
     {
         ClientHelper.SetWeather(LevelWeatherType.None);
-    }
-
-    public void Cleanup()
-    {
     }
 }

@@ -4,17 +4,13 @@ using UnityEngine;
 
 namespace FishsGrandAdventure.Game.Events;
 
-public class SpeedRunEvent : IGameEvent
+public class SpeedRunEvent : BaseGameEvent
 {
-    public string Description => "It's Speedrunning Time!";
-    public Color Color => new Color(0.78f, 1f, 0f);
-    public GameEventType GameEventType => GameEventType.SpeedRun;
+    public override string Description => "It's Speedrunning Time!";
+    public override Color Color => new Color(0.78f, 1f, 0f);
+    public override GameEventType GameEventType => GameEventType.SpeedRun;
 
-    public void OnServerInitialize(SelectableLevel level)
-    {
-    }
-
-    public void OnBeforeModifyLevel(ref SelectableLevel level)
+    public override void OnPreModifyLevel(ref SelectableLevel level)
     {
         NetworkUtils.BroadcastAll(new PacketSetPlayerMoveSpeed
         {
@@ -22,7 +18,7 @@ public class SpeedRunEvent : IGameEvent
         });
     }
 
-    public void OnFinishGeneratingLevel()
+    public override void OnPreFinishGeneratingLevel()
     {
         NetworkUtils.BroadcastAll(new PacketGlobalTimeSpeedMultiplier
         {
@@ -30,7 +26,7 @@ public class SpeedRunEvent : IGameEvent
         });
     }
 
-    public void Cleanup()
+    public override void Cleanup()
     {
         NetworkUtils.BroadcastAll(new PacketGlobalTimeSpeedMultiplier
         {

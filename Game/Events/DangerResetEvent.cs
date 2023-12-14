@@ -2,26 +2,14 @@
 
 namespace FishsGrandAdventure.Game.Events;
 
-public class DangerResetEvent : IGameEvent
+public class DangerResetEvent : BaseGameEvent
 {
-    public string Description => "Things have calmed down! (Danger has been reset)";
-    public Color Color => Color.cyan;
-    public GameEventType GameEventType => GameEventType.DangerReset;
+    public override string Description => "Things have calmed down! (Danger has been reset)";
+    public override Color Color => Color.cyan;
+    public override GameEventType GameEventType => GameEventType.DangerReset;
 
-    // These are handled by the plugin itself, so we don't need to do anything here.
-    public void OnServerInitialize(SelectableLevel level)
+    public override void OnPreModifyLevel(ref SelectableLevel level)
     {
-    }
-
-    public void OnBeforeModifyLevel(ref SelectableLevel level)
-    {
-    }
-
-    public void OnFinishGeneratingLevel()
-    {
-    }
-
-    public void Cleanup()
-    {
+        GameEventManager.DangerLevels[level] = 0f;
     }
 }

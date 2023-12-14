@@ -65,7 +65,7 @@ internal class CommandListener
             case "!help":
             {
                 SendChatMessage(
-                    "Available commands: !help, !ping, !restart, !setevent, !events, !setcredits, !debug, !playmusic, !stopmusic, !audioclips"
+                    "Available commands: !help, !ping, !restart, !setevent, !skip, !events, !setcredits, !debug, !playmusic, !stopmusic, !audioclips"
                 );
                 return;
             }
@@ -121,7 +121,7 @@ internal class CommandListener
 
                 if (args.Length == 0)
                 {
-                    SendChatMessage("You need to specify an event name!");
+                    SendChatMessage("!setevent <event>");
                     return;
                 }
 
@@ -133,6 +133,22 @@ internal class CommandListener
 
                     GameEventManager.SetupNewEvent();
                 }
+
+                return;
+            }
+
+            case "!skip":
+            {
+                if (!GameNetworkManager.Instance.isHostingGame)
+                {
+                    SendChatMessage("Only the host can do this.");
+                    return;
+                }
+
+                HUDManager.Instance.AddTextToChatOnServer("Skipping event!");
+
+                GameState.ForceLoadEvent = null;
+                GameEventManager.SetupNewEvent();
 
                 return;
             }
@@ -153,7 +169,7 @@ internal class CommandListener
 
                 if (args.Length == 0)
                 {
-                    SendChatMessage("You need to specify the credit amount to set!");
+                    SendChatMessage("!setcredits <amount>");
                     return;
                 }
 
@@ -241,6 +257,28 @@ internal class CommandListener
 
                 SendChatMessage(AudioManager.LoadedAudio.Keys.Aggregate("Audio clips: ",
                     (current, key) => $"{current}{key}, "));
+
+                return;
+            }
+
+            case "!settime":
+            {
+                if (!GameNetworkManager.Instance.isHostingGame)
+                {
+                    SendChatMessage("Only the host can do this");
+                    return;
+                }
+
+                if (args.Length == 0)
+                {
+                    SendChatMessage("!settime [time]");
+                    return;
+                }
+
+                if (float.TryParse(args[0], out float time))
+                {
+                    TimeOfDay.Instance.globalTime = time;
+                }
 
                 return;
             }

@@ -1,19 +1,25 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Collections.Generic;
+using FishsGrandAdventure.Utils;
+using UnityEngine;
 
 namespace FishsGrandAdventure.Game.Events;
 
-public class HoardingEvent : IGameEvent
+public class HoardingEvent : BaseGameEvent
 {
-    public string Description => "The Backstreets";
-    public Color Color => Color.gray;
-    public GameEventType GameEventType => GameEventType.Hoarding;
+    public override string Description => "The Backstreets";
+    public override Color Color => Color.gray;
+    public override GameEventType GameEventType => GameEventType.Hoarding;
 
-    public void OnServerInitialize(SelectableLevel level)
+    public override void OnPreModifyLevel(ref SelectableLevel level)
     {
-    }
+        float dangerLevel = GameEventManager.DangerLevels[level];
 
-    public void OnBeforeModifyLevel(ref SelectableLevel level)
-    {
+        level.enemySpawnChanceThroughoutDay =
+            new AnimationCurve(new Keyframe(0f, 500f + dangerLevel));
+
+        ModUtils.AddSpecificEnemiesForEvent(level, new List<Type> { typeof(HoarderBugAI) });
+
         foreach (SpawnableEnemyWithRarity spawnableEnemyWithRarity in level.Enemies)
         {
             if (spawnableEnemyWithRarity.enemyType.enemyPrefab.GetComponent<HoarderBugAI>() != null)
@@ -21,13 +27,5 @@ public class HoardingEvent : IGameEvent
                 spawnableEnemyWithRarity.rarity = 999;
             }
         }
-    }
-
-    public void OnFinishGeneratingLevel()
-    {
-    }
-
-    public void Cleanup()
-    {
     }
 }

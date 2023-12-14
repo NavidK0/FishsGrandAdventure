@@ -1,11 +1,10 @@
-﻿using System;
-using FishsGrandAdventure.Game;
+﻿using FishsGrandAdventure.Game;
 using FishsGrandAdventure.Network;
 using FishsGrandAdventure.Utils;
 using Unity.Netcode;
 using UnityEngine;
 
-namespace FishsGrandAdventure.Effects;
+namespace FishsGrandAdventure.Behaviors;
 
 public class ExplodingJester : MonoBehaviour
 {

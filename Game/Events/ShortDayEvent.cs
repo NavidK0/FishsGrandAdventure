@@ -3,21 +3,13 @@ using UnityEngine;
 
 namespace FishsGrandAdventure.Game.Events;
 
-public class ShortDayEvent : IGameEvent
+public class ShortDayEvent : BaseGameEvent
 {
-    public string Description => "Feels like there's never enough time...";
-    public Color Color => Color.yellow;
-    public GameEventType GameEventType => GameEventType.ShortDay;
+    public override string Description => "Feels like there's never enough time...";
+    public override Color Color => Color.yellow;
+    public override GameEventType GameEventType => GameEventType.ShortDay;
 
-    public void OnServerInitialize(SelectableLevel level)
-    {
-    }
-
-    public void OnBeforeModifyLevel(ref SelectableLevel level)
-    {
-    }
-
-    public void OnFinishGeneratingLevel()
+    public override void OnPreFinishGeneratingLevel()
     {
         NetworkUtils.BroadcastAll(new PacketGlobalTimeSpeedMultiplier
         {
@@ -25,7 +17,7 @@ public class ShortDayEvent : IGameEvent
         });
     }
 
-    public void Cleanup()
+    public override void Cleanup()
     {
         NetworkUtils.BroadcastAll(new PacketGlobalTimeSpeedMultiplier
         {

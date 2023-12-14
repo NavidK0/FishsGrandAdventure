@@ -2,26 +2,22 @@
 
 namespace FishsGrandAdventure.Game.Events;
 
-public class TurretEvent : IGameEvent
+public class TurretEvent : BaseGameEvent
 {
-    public string Description => "Turrets. Lots of Turrets.";
-    public Color Color => Color.red;
+    public override string Description => "Turrets. Lots of Turrets.";
+    public override Color Color => Color.red;
 
-    public GameEventType GameEventType => GameEventType.Turret;
+    public override GameEventType GameEventType => GameEventType.Turret;
 
-    public void OnServerInitialize(SelectableLevel level)
+    public override void OnPreModifyLevel(ref SelectableLevel level)
     {
-    }
-
-    public void OnBeforeModifyLevel(ref SelectableLevel level)
-    {
-    }
-
-    public void OnFinishGeneratingLevel()
-    {
-    }
-
-    public void Cleanup()
-    {
+        foreach (SpawnableMapObject spawnableMapObject in level.spawnableMapObjects)
+        {
+            if (spawnableMapObject.prefabToSpawn.GetComponentInChildren<Landmine>() != null)
+            {
+                spawnableMapObject.numberToSpawn =
+                    new AnimationCurve(new Keyframe(0f, 175f), new Keyframe(1f, 150f));
+            }
+        }
     }
 }

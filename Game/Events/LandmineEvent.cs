@@ -2,25 +2,21 @@
 
 namespace FishsGrandAdventure.Game.Events;
 
-public class LandmineEvent : IGameEvent
+public class LandmineEvent : BaseGameEvent
 {
-    public string Description => "Landmines Abound!";
-    public Color Color => Color.red;
-    public GameEventType GameEventType => GameEventType.Landmine;
+    public override string Description => "Landmines Abound!";
+    public override Color Color => Color.red;
+    public override GameEventType GameEventType => GameEventType.Landmine;
 
-    public void OnServerInitialize(SelectableLevel level)
+    public override void OnPreModifyLevel(ref SelectableLevel level)
     {
-    }
-
-    public void OnBeforeModifyLevel(ref SelectableLevel level)
-    {
-    }
-
-    public void OnFinishGeneratingLevel()
-    {
-    }
-
-    public void Cleanup()
-    {
+        foreach (SpawnableMapObject spawnableMapObject in level.spawnableMapObjects)
+        {
+            if (spawnableMapObject.prefabToSpawn.GetComponentInChildren<Turret>() != null)
+            {
+                spawnableMapObject.numberToSpawn =
+                    new AnimationCurve(new Keyframe(0f, 200f), new Keyframe(1f, 25f));
+            }
+        }
     }
 }

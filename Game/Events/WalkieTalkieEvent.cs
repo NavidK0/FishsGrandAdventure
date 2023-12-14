@@ -2,17 +2,13 @@
 
 namespace FishsGrandAdventure.Game.Events;
 
-public class WalkieTalkieEvent : IGameEvent
+public class WalkieTalkieEvent : BaseGameEvent
 {
-    public string Description => "Communication is Key!";
-    public Color Color => new Color(0.5f, 0.5f, 0.5f);
-    public GameEventType GameEventType => GameEventType.WalkieTalkies;
+    public override string Description => "Communication is Key!";
+    public override Color Color => new Color(0.5f, 0.5f, 0.5f);
+    public override GameEventType GameEventType => GameEventType.WalkieTalkies;
 
-    public void OnServerInitialize(SelectableLevel level)
-    {
-    }
-
-    public void OnBeforeModifyLevel(ref SelectableLevel level)
+    public override void OnPreModifyLevel(ref SelectableLevel level)
     {
         Terminal terminal = Object.FindObjectOfType<Terminal>();
         int orderedItemCount = terminal.orderedItemsFromTerminal.Count;
@@ -27,13 +23,5 @@ public class WalkieTalkieEvent : IGameEvent
         {
             terminal.orderedItemsFromTerminal.Add(0);
         }
-    }
-
-    public void OnFinishGeneratingLevel()
-    {
-    }
-
-    public void Cleanup()
-    {
     }
 }

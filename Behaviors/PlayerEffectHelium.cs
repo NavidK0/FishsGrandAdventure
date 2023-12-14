@@ -1,7 +1,6 @@
 ﻿using GameNetcodeStuff;
-using UnityEngine;
 
-namespace FishsGrandAdventure.Effects;
+namespace FishsGrandAdventure.Behaviors;
 
 public class PlayerEffectHelium : Effect
 {

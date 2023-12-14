@@ -1,19 +1,22 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Collections.Generic;
+using FishsGrandAdventure.Utils;
+using UnityEngine;
 
 namespace FishsGrandAdventure.Game.Events;
 
-public class SnareFleasEvent : IGameEvent
+public class SnareFleasEvent : BaseGameEvent
 {
-    public string Description => "Snare Fleas and Friends!";
-    public Color Color => Color.red;
-    public GameEventType GameEventType => GameEventType.SnareFleas;
+    public override string Description => "Snare Fleas and Friends!";
+    public override Color Color => Color.red;
+    public override GameEventType GameEventType => GameEventType.SnareFleas;
 
-    public void OnServerInitialize(SelectableLevel level)
+    public override void OnPreModifyLevel(ref SelectableLevel level)
     {
-    }
+        ModUtils.AddSpecificEnemiesForEvent(level, new List<Type> { typeof(CentipedeAI) });
+        ModUtils.AddSpecificEnemiesForEvent(level, new List<Type> { typeof(FlowermanAI) });
+        ModUtils.AddSpecificEnemiesForEvent(level, new List<Type> { typeof(SpringManAI) });
 
-    public void OnBeforeModifyLevel(ref SelectableLevel level)
-    {
         foreach (SpawnableEnemyWithRarity spawnableEnemyWithRarity in level.Enemies)
         {
             spawnableEnemyWithRarity.rarity = 0;
@@ -33,13 +36,5 @@ public class SnareFleasEvent : IGameEvent
                 spawnableEnemyWithRarity.rarity = 100;
             }
         }
-    }
-
-    public void OnFinishGeneratingLevel()
-    {
-    }
-
-    public void Cleanup()
-    {
     }
 }

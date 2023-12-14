@@ -3,12 +3,13 @@ using FishsGrandAdventure.Utils;
 using GameNetcodeStuff;
 using UnityEngine;
 
-namespace FishsGrandAdventure.Effects;
+namespace FishsGrandAdventure.Behaviors;
 
 public class PlayerEffectBlazed : Effect
 {
-    private const float CooldownTime = 90;
+    private const float CooldownTime = 60;
     private const float InitialFuelValue = 1.3f;
+    private const float MaxDrunkness = 0.7f;
 
     public PlayerControllerB PlayerController;
 
@@ -42,14 +43,16 @@ public class PlayerEffectBlazed : Effect
 
     private void LateUpdate()
     {
+        PlayerController.drunkness = Mathf.Clamp(PlayerController.drunkness, 0, MaxDrunkness);
+
         if (PlayerController.drunkness > 0f)
         {
             for (var index = 0; index < StartOfRound.Instance.allPlayerScripts.Length; index++)
             {
                 SoundManager.Instance.SetPlayerPitch(
                     Mathf.Clamp(
-                        Mathf.Clamp(PlayerController.drunkness, 0, 8f)
-                            .Remap(0f, 8f, 1f, 2.5f),
+                        Mathf.Clamp(PlayerController.drunkness, 0, MaxDrunkness)
+                            .Remap(0f, MaxDrunkness, 1f, 1.5f),
                         1f,
                         2f),
                     index);
@@ -69,6 +72,7 @@ public class PlayerEffectBlazed : Effect
         {
             AudioManager.StopMusic(true, 2f);
             musicFadingOut = true;
+            cooldown = CooldownTime;
         }
 
         if (cooldown > 0f)

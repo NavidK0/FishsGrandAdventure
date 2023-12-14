@@ -5,6 +5,7 @@ using FishsGrandAdventure.Utils;
 using GameNetcodeStuff;
 using Newtonsoft.Json;
 using Unity.Netcode;
+using Object = UnityEngine.Object;
 
 namespace FishsGrandAdventure.Network;
 
@@ -189,6 +190,12 @@ public static class PacketParser
             case PacketStopMusic packet:
             {
                 AudioManager.StopMusic(packet.FadeOut, packet.FadeOutDuration);
+                break;
+            }
+
+            case PacketStopBoomboxes:
+            {
+                Object.FindObjectsOfType<BoomboxItem>().ForEach(bi => bi.ItemActivate(false));
                 break;
             }
 

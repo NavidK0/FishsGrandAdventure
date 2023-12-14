@@ -108,10 +108,20 @@ public class PacketPlayMusic : Packet
 }
 
 [Serializable]
+public class PacketPlayEventIntro : PacketPlayMusic
+{
+}
+
+[Serializable]
 public class PacketStopMusic : Packet
 {
     public bool FadeOut;
     public float FadeOutDuration = 1f;
+}
+
+[Serializable]
+public class PacketStopBoomboxes : Packet
+{
 }
 
 [Serializable]

@@ -8,17 +8,13 @@ using UnityEngine;
 
 namespace FishsGrandAdventure.Game.Events;
 
-public class ClownWorldEvent : IGameEvent
+public class ClownWorldEvent : BaseGameEvent
 {
-    public string Description => "Clown World";
-    public Color Color => new Color32(252, 126, 0, 255);
-    public GameEventType GameEventType => GameEventType.ClownWorld;
+    public override string Description => "Clown World";
+    public override Color Color => new Color32(252, 126, 0, 255);
+    public override GameEventType GameEventType => GameEventType.ClownWorld;
 
-    public void OnServerInitialize(SelectableLevel level)
-    {
-    }
-
-    public void OnBeforeModifyLevel(ref SelectableLevel level)
+    public override void OnPreModifyLevel(ref SelectableLevel level)
     {
         ModUtils.AddSpecificItemsForEvent(level, new List<string> { "airhorn", "clown horn" });
 
@@ -35,20 +31,20 @@ public class ClownWorldEvent : IGameEvent
         }
     }
 
-    public void OnFinishGeneratingLevel()
-    {
-    }
-
-    public void Cleanup()
+    public override void Cleanup()
     {
         PatchClownWorld.Clownified = false;
+
+        StormyWeather stormy = Object.FindObjectOfType<StormyWeather>(true);
+        stormy.gameObject.SetActive(false);
     }
 }
 
 public static class PatchClownWorld
 {
     public static bool Clownified;
-    public static double LastInputTime;
+
+    private static double LastInputTime;
 
     [HarmonyPatch(typeof(GrabbableObject), "ActivateItemServerRpc")]
     [HarmonyPostfix]

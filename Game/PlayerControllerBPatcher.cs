@@ -1,8 +1,7 @@
-﻿using FishsGrandAdventure.Game;
-using GameNetcodeStuff;
+﻿using GameNetcodeStuff;
 using HarmonyLib;
 
-namespace FishsGrandAdventure.Patches;
+namespace FishsGrandAdventure.Game;
 
 public static class PlayerControllerBPatcher
 {
