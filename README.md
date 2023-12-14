@@ -18,6 +18,19 @@ Skinwalkers by RugbugRedfern - https://thunderstore.io/c/lethal-company/p/Rugbug
 This mod patches a lot of the game, so it's required by both the server and client.  
 Required mods should be loaded automatically by the manifest.
 
+# How To Install (from Releases)
+
+1. Download the latest release from the Releases tab.
+2. Import it into your Thunderstore's Mod Manager profile using Settings > Profile tab > Import local mod.
+3. Done!
+
+# How To Compile and Generate a new zip
+
+1. Build entire solution using your IDE.
+2. Run Packer.cs to generate a zip file.
+3. Import it into your Thunderstore's Mod Manager profile using Settings > Profile tab > Import local mod.
+4. Done!
+
 # Additions (besides the events)
 
 ### Danger Level
@@ -145,9 +158,3 @@ They are rage, brutal, without mercy. But you, you will be worse. RIP AND TEAR U
 #### Wendigo
 
 ...fuck
-
-# How To Compile (and Install)
-
-1. Build entire solution using your IDE.
-2. Run Packer.cs to generate a zip file.
-3. Load it into Thunderstore's Mod Manager manually using Settings > Profile tab > Import local mod.
