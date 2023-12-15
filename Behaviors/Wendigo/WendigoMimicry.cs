@@ -49,6 +49,7 @@ public class WendigoMimicry : Effect
                 if (sample != null)
                 {
                     audioSource.PlayOneShot(sample);
+                    Plugin.Log.LogInfo("Playing wendigo mimicry");
                 }
             }
         }

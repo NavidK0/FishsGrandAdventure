@@ -16,7 +16,7 @@ public static class ModInfo
 {
     public const string Guid = "FishsGrandAdventure";
     public const string Name = "Fish's Grand Adventure";
-    public const string Version = "1.2.1";
+    public const string Version = "1.2.2";
 
     public static string[] Dependencies => new[]
     {
@@ -50,12 +50,14 @@ public class Plugin : BaseUnityPlugin
         // Network Transport Patch
         harmony.PatchAll(typeof(NetworkTransportPatch));
 
-        // Patches
+        // Event Patches
         harmony.PatchAll(typeof(PatchClownWorld));
         harmony.PatchAll(typeof(PatchClownExpo));
         harmony.PatchAll(typeof(PatchSpeedRun));
         harmony.PatchAll(typeof(PatchSeaWorld));
         harmony.PatchAll(typeof(PatchRackAndRoll));
+
+        // Misc
         harmony.PatchAll(typeof(CommandListener));
         harmony.PatchAll(typeof(CustomMoonManager));
         harmony.PatchAll(typeof(PlayerControllerBPatcher));

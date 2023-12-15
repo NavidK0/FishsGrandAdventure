@@ -55,12 +55,6 @@ public class GameEventManager : MonoBehaviour
 
     private static readonly Dictionary<int, SelectableLevel> ClonedLevels = new Dictionary<int, SelectableLevel>();
 
-    private static readonly Dictionary<int, EnemyType> ClonedEnemyTypes = new Dictionary<int, EnemyType>();
-    private static readonly Dictionary<int, EnemyType> ClonedOutsideEnemyTypes = new Dictionary<int, EnemyType>();
-    private static readonly Dictionary<int, EnemyType> ClonedDaytimeEnemyTypes = new Dictionary<int, EnemyType>();
-
-    private static readonly Dictionary<int, Item> ClonedItems = new Dictionary<int, Item>();
-
     private static Terminal terminal;
 
     private static bool initialized;
@@ -326,78 +320,14 @@ public class GameEventManager : MonoBehaviour
     {
         if (!ClonedLevels.ContainsKey(level.levelID))
         {
-            ClonedLevels.Add(level.levelID, Instantiate(level));
+            Plugin.Log.LogInfo($"Creating copy for level {level.levelID}");
+            SelectableLevel clonedLevel = level.DeepCopy();
+            ClonedLevels.Add(level.levelID, clonedLevel);
         }
 
         if (ClonedLevels.TryGetValue(level.levelID, out SelectableLevel originalLevel))
         {
-            ModUtils.CopyLevelProperties(ref level, originalLevel);
-        }
-
-        if (level.Enemies != null)
-        {
-            foreach (SpawnableEnemyWithRarity enemy in level.Enemies)
-            {
-                if (!ClonedEnemyTypes.ContainsKey(enemy.enemyType.GetInstanceID()))
-                {
-                    ClonedEnemyTypes.Add(enemy.enemyType.GetInstanceID(), Instantiate(enemy.enemyType));
-                }
-
-                if (ClonedEnemyTypes.TryGetValue(enemy.enemyType.GetInstanceID(), out EnemyType originalEnemyType))
-                {
-                    ModUtils.CopyEnemyTypeProperties(ref enemy.enemyType, originalEnemyType);
-                }
-            }
-        }
-
-        if (level.OutsideEnemies != null)
-        {
-            foreach (SpawnableEnemyWithRarity enemy in level.OutsideEnemies)
-            {
-                if (!ClonedOutsideEnemyTypes.ContainsKey(enemy.enemyType.GetInstanceID()))
-                {
-                    ClonedOutsideEnemyTypes.Add(enemy.enemyType.GetInstanceID(), Instantiate(enemy.enemyType));
-                }
-
-                if (ClonedOutsideEnemyTypes.TryGetValue(enemy.enemyType.GetInstanceID(),
-                        out EnemyType originalEnemyType))
-                {
-                    ModUtils.CopyEnemyTypeProperties(ref enemy.enemyType, originalEnemyType);
-                }
-            }
-        }
-
-        if (level.DaytimeEnemies != null)
-        {
-            foreach (SpawnableEnemyWithRarity enemy in level.DaytimeEnemies)
-            {
-                if (!ClonedDaytimeEnemyTypes.ContainsKey(enemy.enemyType.GetInstanceID()))
-                {
-                    ClonedDaytimeEnemyTypes.Add(enemy.enemyType.GetInstanceID(), Instantiate(enemy.enemyType));
-                }
-
-                if (ClonedDaytimeEnemyTypes.TryGetValue(enemy.enemyType.GetInstanceID(),
-                        out EnemyType originalEnemyType))
-                {
-                    ModUtils.CopyEnemyTypeProperties(ref enemy.enemyType, originalEnemyType);
-                }
-            }
-        }
-
-        if (level.spawnableScrap != null)
-        {
-            foreach (SpawnableItemWithRarity item in level.spawnableScrap)
-            {
-                if (!ClonedItems.ContainsKey(item.spawnableItem.GetInstanceID()))
-                {
-                    ClonedItems.Add(item.spawnableItem.GetInstanceID(), Instantiate(item.spawnableItem));
-                }
-
-                if (ClonedItems.TryGetValue(item.spawnableItem.GetInstanceID(), out Item originalItem))
-                {
-                    ModUtils.CopyItemProperties(ref item.spawnableItem, originalItem);
-                }
-            }
+            CopyUtils.CopyLevelProperties(ref level, originalLevel);
         }
     }
 }

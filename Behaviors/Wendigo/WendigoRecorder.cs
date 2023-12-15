@@ -57,21 +57,6 @@ public class WendigoRecorder : MonoBehaviour
         }
     }
 
-    private void Start()
-    {
-        try
-        {
-            if (Directory.Exists(audioFolder))
-            {
-                Directory.Delete(audioFolder, true);
-            }
-        }
-        catch (Exception message)
-        {
-            Plugin.Log.LogInfo(message);
-        }
-    }
-
     private void Update()
     {
         if (GameState.CurrentGameEvent?.GameEventType != GameEventType.Wendigo) return;
@@ -138,7 +123,7 @@ public class WendigoRecorder : MonoBehaviour
         using UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip(path, AudioType.WAV);
         yield return Timing.WaitUntilDone(www.SendWebRequest());
 
-        if (www.result != UnityWebRequest.Result.Success)
+        if (www.result == UnityWebRequest.Result.Success)
         {
             AudioClip audioClip = DownloadHandlerAudioClip.GetContent(www);
 

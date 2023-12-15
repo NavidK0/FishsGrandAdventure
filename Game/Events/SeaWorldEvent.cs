@@ -75,6 +75,7 @@ public static class PatchSeaWorld
     private static void PlayerControllerBUpdate(PlayerControllerB __instance)
     {
         if (GameState.CurrentGameEvent?.GameEventType != GameEventType.SeaWorld) return;
+        if (!__instance.IsLocalPlayer) return;
 
         float drunkValue = Mathf.Abs(StartOfRound.Instance.drunknessSpeedEffect.Evaluate(__instance.drunkness) - 1.25f);
 
