@@ -5,6 +5,7 @@ namespace FishsGrandAdventure.Game.Events;
 
 public class GoToTitanEvent : BaseGameEvent
 {
+    public override string Name => "Go To Titan";
     public override string Description => "Let's go to Titan! Why the hell not?";
     public override Color Color => Color.cyan;
     public override GameEventType GameEventType => GameEventType.GoToTitan;

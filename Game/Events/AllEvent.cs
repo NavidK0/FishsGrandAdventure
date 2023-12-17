@@ -9,6 +9,7 @@ namespace FishsGrandAdventure.Game.Events;
 
 public class AllEvent : BaseGameEvent
 {
+    public override string Name => "All";
     public override string Description => "Everything but the kitchen sink!";
     public override Color Color => new Color(0.68f, 0f, 1f);
     public override GameEventType GameEventType => GameEventType.All;

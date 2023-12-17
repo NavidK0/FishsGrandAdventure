@@ -7,7 +7,8 @@ namespace FishsGrandAdventure.Game.Events;
 
 public class SnareFleasEvent : BaseGameEvent
 {
-    public override string Description => "Snare Fleas and Friends!";
+    public override string Name => "Snare Fleas and Friends!";
+    public override string Description => "The best of friends.";
     public override Color Color => Color.red;
     public override GameEventType GameEventType => GameEventType.SnareFleas;
 

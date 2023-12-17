@@ -4,7 +4,8 @@ namespace FishsGrandAdventure.Game.Events;
 
 public class TurretEvent : BaseGameEvent
 {
-    public override string Description => "Turrets. Lots of Turrets.";
+    public override string Name => "Too Many Turrets";
+    public override string Description => "Lots of turrets. Sorry.";
     public override Color Color => Color.red;
 
     public override GameEventType GameEventType => GameEventType.Turret;

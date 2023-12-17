@@ -91,8 +91,8 @@ public static class CopyUtils
         newEnemy.hitEnemyVoiceSFX = enemy.hitEnemyVoiceSFX;
         newEnemy.deathSFX = enemy.deathSFX;
         newEnemy.stunSFX = enemy.stunSFX;
-        newEnemy.miscAnimations = enemy.miscAnimations;
-        newEnemy.audioClips = enemy.audioClips;
+        newEnemy.miscAnimations = (MiscAnimation[])enemy.miscAnimations.Clone();
+        newEnemy.audioClips = (AudioClip[])enemy.audioClips.Clone();
 
         return newEnemy;
     }
@@ -103,7 +103,7 @@ public static class CopyUtils
 
         // Properties
         newItem.itemName = item.itemName;
-        newItem.spawnPositionTypes = item.spawnPositionTypes;
+        newItem.spawnPositionTypes = new List<ItemGroup>(item.spawnPositionTypes);
         newItem.twoHanded = item.twoHanded;
         newItem.twoHandedAnimation = item.twoHandedAnimation;
         newItem.canBeGrabbedBeforeGameStart = item.canBeGrabbedBeforeGameStart;
@@ -158,8 +158,8 @@ public static class CopyUtils
         newItem.rotationOffset = item.rotationOffset;
         newItem.positionOffset = item.positionOffset;
         newItem.meshOffset = item.meshOffset;
-        newItem.meshVariants = item.meshVariants;
-        newItem.materialVariants = item.materialVariants;
+        newItem.meshVariants = (Mesh[])item.meshVariants.Clone();
+        newItem.materialVariants = (Material[])item.materialVariants.Clone();
         newItem.usableInSpecialAnimations = item.usableInSpecialAnimations;
         newItem.canBeInspected = item.canBeInspected;
 

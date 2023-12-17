@@ -7,7 +7,8 @@ namespace FishsGrandAdventure.Game.Events;
 
 public class BrackenAndCoilEvent : BaseGameEvent
 {
-    public override string Description => "Bracken and Coil";
+    public override string Name => "Bracken and Coil";
+    public override string Description => "Best of friends.";
     public override Color Color => new Color(1f, 0f, 0.32f);
     public override GameEventType GameEventType => GameEventType.BrackenAndCoil;
 

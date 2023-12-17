@@ -7,7 +7,8 @@ namespace FishsGrandAdventure.Game.Events;
 
 public class ThespianSocietyEvent : BaseGameEvent
 {
-    public override string Description => "Thespian Society";
+    public override string Name => "Thespian Society";
+    public override string Description => "We are of a higher class.";
     public override Color Color => new Color(1f, 0f, 0.73f);
     public override GameEventType GameEventType => GameEventType.ThespianSociety;
 

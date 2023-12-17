@@ -5,6 +5,7 @@ namespace FishsGrandAdventure.Game.Events;
 
 public class LongDayEvent : BaseGameEvent
 {
+    public override string Name => "Long Day";
     public override string Description => "It's been one of those days...";
     public override Color Color => Color.yellow;
     public override GameEventType GameEventType => GameEventType.LongDay;

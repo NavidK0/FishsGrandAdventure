@@ -35,6 +35,13 @@ public static class EnumerableUtils
         return ts;
     }
 
+    public static List<T> Shuffle<T>(this IEnumerable<T> list, Random random)
+    {
+        List<T> ts = list.ToList();
+        Shuffle(ts, random);
+        return ts;
+    }
+
     /// <summary>
     /// Randomizes a List.
     /// </summary>
@@ -45,6 +52,19 @@ public static class EnumerableUtils
         for (int i = list.Count - 1; i > 1; i--)
         {
             int rnd = Rng.Next(i + 1);
+
+            T oldI = list[i];
+            T oldRng = list[rnd];
+            list[i] = oldRng;
+            list[rnd] = oldI;
+        }
+    }
+
+    public static void Shuffle<T>(this IList<T> list, Random random)
+    {
+        for (int i = list.Count - 1; i > 1; i--)
+        {
+            int rnd = random.Next(i + 1);
 
             T oldI = list[i];
             T oldRng = list[rnd];
@@ -85,6 +105,18 @@ public static class EnumerableUtils
         try
         {
             return list[Rng.Next(list.Count)];
+        }
+        catch (Exception)
+        {
+            return default;
+        }
+    }
+
+    public static T GetRandomElement<T>(this List<T> list, Random random)
+    {
+        try
+        {
+            return list[random.Next(list.Count)];
         }
         catch (Exception)
         {

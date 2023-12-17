@@ -4,6 +4,7 @@ namespace FishsGrandAdventure.Game.Events;
 
 public class GoToSethsFridgeEvent : BaseGameEvent
 {
+    public override string Name => "Go To Seth's Fridge";
     public override string Description => "Free luxury vacation to Seth's Fridge! Enjoy your stay!";
     public override Color Color => Color.cyan;
     public override GameEventType GameEventType => GameEventType.GoToSethsFridge;

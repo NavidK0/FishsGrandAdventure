@@ -33,7 +33,8 @@ public class RackAndRollEvent : BaseGameEvent
     private Item gunItem;
     private int gunTerminalTempIndex;
 
-    public override string Description => "Rack and Roll";
+    public override string Name => "Rack and Roll";
+    public override string Description => "RIP. AND. TEAR.";
     public override Color Color => new Color(0.97f, 0.99f, 1f);
     public override GameEventType GameEventType => GameEventType.RackAndRoll;
 

@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics;
+using System.Reflection;
 using BepInEx;
 using BepInEx.Logging;
 using FishsGrandAdventure.Audio;
@@ -8,6 +9,7 @@ using FishsGrandAdventure.Game.Events;
 using FishsGrandAdventure.Network;
 using HarmonyLib;
 using UnityEngine;
+using Debug = System.Diagnostics.Debug;
 using NetworkTransport = FishsGrandAdventure.Network.NetworkTransport;
 
 namespace FishsGrandAdventure;
@@ -56,6 +58,7 @@ public class Plugin : BaseUnityPlugin
         harmony.PatchAll(typeof(PatchSpeedRun));
         harmony.PatchAll(typeof(PatchSeaWorld));
         harmony.PatchAll(typeof(PatchRackAndRoll));
+        harmony.PatchAll(typeof(PatchEscapeFactoryEvent));
 
         // Misc
         harmony.PatchAll(typeof(CommandListener));

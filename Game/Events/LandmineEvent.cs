@@ -4,7 +4,8 @@ namespace FishsGrandAdventure.Game.Events;
 
 public class LandmineEvent : BaseGameEvent
 {
-    public override string Description => "Landmines Abound!";
+    public override string Name => "Landmines Abound";
+    public override string Description => "Watch your step!";
     public override Color Color => Color.red;
     public override GameEventType GameEventType => GameEventType.Landmine;
 

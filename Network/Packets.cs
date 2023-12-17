@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using FishsGrandAdventure.Game;
-using FishsGrandAdventure.Utils;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace FishsGrandAdventure.Network;
 
 [Serializable]
-public class Packet
+public abstract class Packet
 {
 }
 
@@ -108,8 +108,12 @@ public class PacketPlayMusic : Packet
 }
 
 [Serializable]
-public class PacketPlayEventIntro : PacketPlayMusic
+public class PacketPlaySFX : Packet
 {
+    public string Name;
+    public float Volume = 1f;
+    public Vector3 Oneshot;
+    public Vector3? Position;
 }
 
 [Serializable]
@@ -129,4 +133,23 @@ public class PacketGrabItem : Packet
 {
     public ulong ClientId;
     public ulong NetworkObjectId;
+}
+
+[Serializable]
+public class PacketTeleportPlayerIntoFactory : Packet
+{
+    public ulong ClientId;
+    public Vector3 Position;
+}
+
+[Serializable]
+public class PacketTeleportNetworkedObject : Packet
+{
+    public ulong NetworkObjectId;
+    public Vector3 Position;
+}
+
+[Serializable]
+public class PacketEscapeFactoryStartEvent : Packet
+{
 }

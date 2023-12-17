@@ -47,6 +47,7 @@ public class GameEventManager : MonoBehaviour
         new ClownExpoEvent(),
         new RackAndRollEvent(),
         new WendigoEvent(),
+        new EscapeFactoryEvent()
     };
 
     public static readonly Dictionary<SelectableLevel, float> DangerLevels = new Dictionary<SelectableLevel, float>();
@@ -172,7 +173,7 @@ public class GameEventManager : MonoBehaviour
             ResetLevelForRound(newLevel);
 
             HUDManager.Instance.AddTextToChatOnServer(
-                $"<color=#{GameState.CurrentGameEvent.Color.ToHex()}>Event: {GameState.CurrentGameEvent.Description}</color>"
+                $"<color=#{GameState.CurrentGameEvent.Color.ToHex()}>Event: {GameState.CurrentGameEvent.Name}</color>"
             );
 
             GameState.CurrentGameEvent.OnServerInitialize(newLevel);
@@ -253,11 +254,24 @@ public class GameEventManager : MonoBehaviour
         }
     }
 
-    [HarmonyPatch(typeof(StartOfRound), "ShipHasLeft")]
-    [HarmonyPostfix]
-    private static void EndRound()
+    [HarmonyPatch(typeof(RoundManager), "GenerateNewLevelClientRpc")]
+    [HarmonyPrefix]
+    public static void OnPreGenerateLevel(int randomSeed, int levelID)
     {
-        ResetEvents();
+        if (GameState.CurrentGameEvent != null)
+        {
+            GameState.CurrentGameEvent.OnPreGenerateLevel(randomSeed, levelID);
+        }
+    }
+
+    [HarmonyPatch(typeof(RoundManager), "GenerateNewLevelClientRpc")]
+    [HarmonyPostfix]
+    public static void OnPostGenerateLevel(int randomSeed, int levelID)
+    {
+        if (GameState.CurrentGameEvent != null)
+        {
+            GameState.CurrentGameEvent.OnPostGenerateLevel(randomSeed, levelID);
+        }
     }
 
     [HarmonyPatch(typeof(RoundManager), "FinishGeneratingLevel")]
@@ -272,15 +286,35 @@ public class GameEventManager : MonoBehaviour
     private static void OnPostFinishGeneratingLevel()
     {
         GameState.CurrentGameEvent?.OnPostFinishGeneratingLevel();
+    }
 
+    [HarmonyPatch(typeof(StartOfRound), "openingDoorsSequence")]
+    [HarmonyPostfix]
+    private static void OnPreRoundStart()
+    {
+        GameState.CurrentGameEvent?.OnPreRoundStart();
+    }
+
+    [HarmonyPatch(typeof(StartOfRound), "OnShipLandedMiscEvents")]
+    [HarmonyPostfix]
+    private static void OnPostRoundStart()
+    {
+        GameState.CurrentGameEvent?.OnPostRoundStart();
         if (RoundManager.Instance.IsServer && GameState.CurrentGameEvent?.GameEventType != GameEventType.None)
         {
             NetworkUtils.BroadcastAll(new PacketGameTip
             {
-                Header = """Adventure Alert™""",
-                Body = GameState.CurrentGameEvent?.Description ?? "<unknown>"
+                Header = $"{GameState.CurrentGameEvent?.Name}",
+                Body = $"{GameState.CurrentGameEvent?.Description}"
             });
         }
+    }
+
+    [HarmonyPatch(typeof(StartOfRound), "ShipHasLeft")]
+    [HarmonyPostfix]
+    private static void EndRound()
+    {
+        ResetEvents();
     }
 
     private static void ResetEvents()

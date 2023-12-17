@@ -362,4 +362,47 @@ public static class ModUtils
     {
         return (float)FloodLevelOffsetField.GetValue(weather);
     }
+
+    public static MethodInfo ThrowObjectServerRpcMethodInfo =
+        typeof(PlayerControllerB).GetMethod("ThrowObjectServerRpc", BindingFlags.NonPublic | BindingFlags.Instance);
+
+    public static MethodInfo SetSpecialGrabAnimationBoolMethodInfo =
+        typeof(PlayerControllerB).GetMethod("SetSpecialGrabAnimationBool",
+            BindingFlags.NonPublic | BindingFlags.Instance);
+
+    public static FieldInfo ThrowingObjectFieldInfo = typeof(PlayerControllerB).GetField("throwingObject",
+        BindingFlags.NonPublic | BindingFlags.Instance);
+
+    public static void ThrowObjectServerRpc(
+        this PlayerControllerB playerController,
+        NetworkObjectReference grabbedObject,
+        bool droppedInElevator,
+        bool droppedInShipRoom,
+        Vector3 targetFloorPosition,
+        int floorYRot
+    )
+    {
+        ThrowObjectServerRpcMethodInfo.Invoke(playerController, new object[]
+        {
+            grabbedObject,
+            droppedInElevator,
+            droppedInShipRoom,
+            targetFloorPosition,
+            floorYRot
+        });
+    }
+
+    public static void SetSpecialGrabAnimationBool(
+        this PlayerControllerB playerController,
+        bool setTrue,
+        GrabbableObject currentItem = null
+    )
+    {
+        SetSpecialGrabAnimationBoolMethodInfo.Invoke(playerController, new object[] { setTrue, currentItem });
+    }
+
+    public static void SetThrowingObject(this PlayerControllerB playerController, bool throwingObject)
+    {
+        ThrowingObjectFieldInfo.SetValue(playerController, throwingObject);
+    }
 }

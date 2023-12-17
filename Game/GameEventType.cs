@@ -52,5 +52,7 @@ public enum GameEventType
 
     RackAndRoll,
 
-    Wendigo
+    Wendigo,
+
+    EscapeFactory
 }

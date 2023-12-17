@@ -5,6 +5,7 @@ namespace FishsGrandAdventure.Game.Events;
 
 public class ShortDayEvent : BaseGameEvent
 {
+    public override string Name => "Short Day";
     public override string Description => "Feels like there's never enough time...";
     public override Color Color => Color.yellow;
     public override GameEventType GameEventType => GameEventType.ShortDay;

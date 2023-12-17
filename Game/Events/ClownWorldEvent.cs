@@ -10,7 +10,8 @@ namespace FishsGrandAdventure.Game.Events;
 
 public class ClownWorldEvent : BaseGameEvent
 {
-    public override string Description => "Clown World";
+    public override string Name => "Clown World";
+    public override string Description => "Clowning is an art, and I am a master artist.";
     public override Color Color => new Color32(252, 126, 0, 255);
     public override GameEventType GameEventType => GameEventType.ClownWorld;
 

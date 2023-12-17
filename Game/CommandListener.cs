@@ -65,7 +65,7 @@ internal class CommandListener
             case "!help":
             {
                 SendChatMessage(
-                    "Available commands: !help, !ping, !bbv, !restart, !setevent, !skip, !events, !setcredits, !debug, !playmusic, !stopmusic, !audioclips, !settime"
+                    "Available commands: !help, !ping, !restart, !setevent, !skip, !events, !setcredits, !debug, !playmusic, !playsfx, !stopmusic, !audioclips, !settime, !meetquota"
                 );
                 return;
             }
@@ -224,6 +224,29 @@ internal class CommandListener
                 return;
             }
 
+            case "!playsfx":
+            {
+                if (!GameNetworkManager.Instance.isHostingGame)
+                {
+                    SendChatMessage("Only the host can do this.");
+                    return;
+                }
+
+                if (args.Length == 0)
+                {
+                    SendChatMessage("!playsfx <name>");
+                    return;
+                }
+
+                NetworkUtils.BroadcastAll(new PacketPlaySFX
+                {
+                    Name = args[0],
+                    Volume = args.Length > 1 ? float.Parse(args[1]) : .85f,
+                });
+
+                return;
+            }
+
             case "!stopmusic":
             {
                 if (!GameNetworkManager.Instance.isHostingGame)
@@ -255,7 +278,7 @@ internal class CommandListener
                     return;
                 }
 
-                SendChatMessage(AudioManager.LoadedAudio.Keys.Aggregate("Audio clips: ",
+                SendChatMessage(AudioManager.LoadedSFX.Keys.Aggregate("Audio clips: ",
                     (current, key) => $"{current}{key}, "));
 
                 return;
@@ -279,6 +302,23 @@ internal class CommandListener
                 {
                     TimeOfDay.Instance.globalTime = time;
                 }
+
+                return;
+            }
+
+            case "!meetquota":
+            {
+                if (!GameNetworkManager.Instance.isHostingGame)
+                {
+                    SendChatMessage("Only the host can do this");
+                    return;
+                }
+
+                TimeOfDay.Instance.quotaFulfilled = TimeOfDay.Instance.profitQuota;
+
+                SendChatMessage(
+                    $"<color=blue>Quota should now be fulfilled with {TimeOfDay.Instance.quotaFulfilled} credits.</color>");
+
 
                 return;
             }

@@ -4,7 +4,8 @@ namespace FishsGrandAdventure.Game.Events;
 
 public class ChaosEvent : BaseGameEvent
 {
-    public override string Description => "Chaos Theory";
+    public override string Name => "Chaos Theory";
+    public override string Description => "That's a lot of enemies.";
     public override Color Color => new Color(1f, 0f, 0.99f);
     public override GameEventType GameEventType => GameEventType.Chaos;
 

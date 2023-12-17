@@ -36,37 +36,44 @@ public class Timing : MonoBehaviour
     /// </summary>
     [Tooltip("How quickly the SlowUpdate segment ticks.")]
     public float TimeBetweenSlowUpdateCalls = 1f / 7f;
+
     /// <summary>
     /// The amount that each coroutine should be seperated inside the Unity profiler. NOTE: When the profiler window
     /// is not open this value is ignored and all coroutines behave as if "None" is selected.
     /// </summary>
     [Tooltip("How much data should be sent to the profiler window when it's open.")]
     public DebugInfoType ProfilerDebugAmount;
+
     /// <summary>
     /// The number of coroutines that are being run in the Update segment.
     /// </summary>
     [Tooltip("A count of the number of Update coroutines that are currently running."), Space(12)]
     public int UpdateCoroutines;
+
     /// <summary>
     /// The number of coroutines that are being run in the FixedUpdate segment.
     /// </summary>
     [Tooltip("A count of the number of FixedUpdate coroutines that are currently running.")]
     public int FixedUpdateCoroutines;
+
     /// <summary>
     /// The number of coroutines that are being run in the LateUpdate segment.
     /// </summary>
     [Tooltip("A count of the number of LateUpdate coroutines that are currently running.")]
     public int LateUpdateCoroutines;
+
     /// <summary>
     /// The number of coroutines that are being run in the SlowUpdate segment.
     /// </summary>
     [Tooltip("A count of the number of SlowUpdate coroutines that are currently running.")]
     public int SlowUpdateCoroutines;
+
     /// <summary>
     /// The time in seconds that the current segment has been running.
     /// </summary>
     [System.NonSerialized]
     public float localTime;
+
     /// <summary>
     /// The time in seconds that the current segment has been running.
     /// </summary>
@@ -74,11 +81,13 @@ public class Timing : MonoBehaviour
     {
         get { return Instance.localTime; }
     }
+
     /// <summary>
     /// The amount of time in fractional seconds that elapsed between this frame and the last frame.
     /// </summary>
     [System.NonSerialized]
     public float deltaTime;
+
     /// <summary>
     /// The amount of time in fractional seconds that elapsed between this frame and the last frame.
     /// </summary>
@@ -86,22 +95,27 @@ public class Timing : MonoBehaviour
     {
         get { return Instance.deltaTime; }
     }
+
     /// <summary>
     /// Used for advanced coroutine control.
     /// </summary>
     public static System.Func<IEnumerator<float>, CoroutineHandle, IEnumerator<float>> ReplacementFunction;
+
     /// <summary>
     /// This event fires just before each segment is run.
     /// </summary>
     public static event System.Action OnPreExecute;
+
     /// <summary>
     /// You can use "yield return Timing.WaitForOneFrame;" inside a coroutine function to go to the next frame. 
     /// </summary>
     public const float WaitForOneFrame = float.NegativeInfinity;
+
     /// <summary>
     /// The main thread that (almost) everything in unity runs in.
     /// </summary>
     public static System.Threading.Thread MainThread { get; private set; }
+
     /// <summary>
     /// The handle of the current coroutine that is running.
     /// </summary>
@@ -115,6 +129,7 @@ public class Timing : MonoBehaviour
             return default(CoroutineHandle);
         }
     }
+
     /// <summary>
     /// The handle of the current coroutine that is running.
     /// </summary>
@@ -142,17 +157,23 @@ public class Timing : MonoBehaviour
     private float _lastSlowUpdateDeltaTime;
     private ushort _framesSinceUpdate;
     private ushort _expansions = 1;
+
     [SerializeField, HideInInspector]
     private byte _instanceID;
 
     private readonly Dictionary<CoroutineHandle, HashSet<CoroutineHandle>> _waitingTriggers =
         new Dictionary<CoroutineHandle, HashSet<CoroutineHandle>>();
+
     private readonly HashSet<CoroutineHandle> _allWaiting = new HashSet<CoroutineHandle>();
+
     private readonly Dictionary<CoroutineHandle, ProcessIndex> _handleToIndex =
         new Dictionary<CoroutineHandle, ProcessIndex>();
+
     private readonly Dictionary<ProcessIndex, CoroutineHandle> _indexToHandle =
         new Dictionary<ProcessIndex, CoroutineHandle>();
+
     private readonly Dictionary<CoroutineHandle, string> _processTags = new Dictionary<CoroutineHandle, string>();
+
     private readonly Dictionary<string, HashSet<CoroutineHandle>> _taggedProcesses =
         new Dictionary<string, HashSet<CoroutineHandle>>();
 
@@ -839,6 +860,7 @@ public class Timing : MonoBehaviour
             ? new CoroutineHandle()
             : RunCoroutineInternal(coroutine, Segment.Update, tag, new CoroutineHandle(_instanceID), true);
     }
+
     /// <summary>
     /// Run a new coroutine on this Timing instance.
     /// </summary>
@@ -2634,18 +2656,22 @@ public enum Segment
     /// Sometimes returned as an error state
     /// </summary>
     Invalid = -1,
+
     /// <summary>
     /// This is the default timing segment
     /// </summary>
     Update,
+
     /// <summary>
     /// This is primarily used for physics calculations
     /// </summary>
     FixedUpdate,
+
     /// <summary>
     /// This is run immediately after update
     /// </summary>
     LateUpdate,
+
     /// <summary>
     /// This executes, by default, about as quickly as the eye can detect changes in a text field
     /// </summary>
@@ -2662,10 +2688,12 @@ public enum DebugInfoType
     /// None coroutines will be separated in the Unity profiler
     /// </summary>
     None,
+
     /// <summary>
     /// The Unity profiler will identify each coroutine individually
     /// </summary>
     SeperateCoroutines,
+
     /// <summary>
     /// Coroutines will be separated and any tags or layers will be identified
     /// </summary>
@@ -2805,7 +2833,9 @@ public static class MECExtensionMethods2
     {
         while (Timing.MainThread != System.Threading.Thread.CurrentThread || (gameObject1 &&
                                                                               gameObject1.activeInHierarchy &&
-                                                                              gameObject2 && gameObject2.activeInHierarchy && coroutine.MoveNext()))
+                                                                              gameObject2 &&
+                                                                              gameObject2.activeInHierarchy &&
+                                                                              coroutine.MoveNext()))
             yield return coroutine.Current;
     }
 
@@ -2822,7 +2852,10 @@ public static class MECExtensionMethods2
     {
         while (Timing.MainThread != System.Threading.Thread.CurrentThread || (gameObject1 &&
                                                                               gameObject1.activeInHierarchy &&
-                                                                              gameObject2 && gameObject2.activeInHierarchy && gameObject3 && gameObject3.activeInHierarchy &&
+                                                                              gameObject2 &&
+                                                                              gameObject2.activeInHierarchy &&
+                                                                              gameObject3 &&
+                                                                              gameObject3.activeInHierarchy &&
                                                                               coroutine.MoveNext()))
             yield return coroutine.Current;
     }

@@ -7,7 +7,8 @@ namespace FishsGrandAdventure.Game.Events;
 
 public class HoardingEvent : BaseGameEvent
 {
-    public override string Description => "The Backstreets";
+    public override string Name => "The Ghettos";
+    public override string Description => "Not the safest part of town... hey, where's my scrap?!";
     public override Color Color => Color.gray;
     public override GameEventType GameEventType => GameEventType.Hoarding;
 

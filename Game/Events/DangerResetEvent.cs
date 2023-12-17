@@ -4,7 +4,8 @@ namespace FishsGrandAdventure.Game.Events;
 
 public class DangerResetEvent : BaseGameEvent
 {
-    public override string Description => "Things have calmed down! (Danger has been reset)";
+    public override string Name => "Danger Reset";
+    public override string Description => "Things have calmed down!";
     public override Color Color => Color.cyan;
     public override GameEventType GameEventType => GameEventType.DangerReset;
 

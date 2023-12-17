@@ -1,10 +1,12 @@
 ﻿using System;
 using FishsGrandAdventure.Audio;
 using FishsGrandAdventure.Game;
+using FishsGrandAdventure.Game.Events;
 using FishsGrandAdventure.Utils;
 using GameNetcodeStuff;
 using Newtonsoft.Json;
 using Unity.Netcode;
+using UnityEngine;
 using Object = UnityEngine.Object;
 
 namespace FishsGrandAdventure.Network;
@@ -187,6 +189,27 @@ public static class PacketParser
                 break;
             }
 
+            case PacketPlaySFX packet:
+            {
+                if (packet.Position.HasValue)
+                {
+                    AudioManager.PlaySFXAtPoint(
+                        packet.Name,
+                        packet.Position.Value,
+                        packet.Volume
+                    );
+                }
+                else
+                {
+                    AudioManager.PlaySFX(
+                        packet.Name,
+                        packet.Volume
+                    );
+                }
+
+                break;
+            }
+
             case PacketStopMusic packet:
             {
                 AudioManager.StopMusic(packet.FadeOut, packet.FadeOutDuration);
@@ -210,6 +233,38 @@ public static class PacketParser
                         NetworkManager.Singleton.SpawnManager.SpawnedObjects[networkObjectId];
 
                     playerController.GrabObject(netObject);
+                }
+
+                break;
+            }
+
+            case PacketTeleportPlayerIntoFactory packet:
+            {
+                PlayerControllerB playerController =
+                    StartOfRound.Instance.allPlayerScripts.Find(ps => ps.actualClientId == packet.ClientId);
+                Vector3 pos = packet.Position;
+
+                ClientHelper.TeleportPlayerIntoFactory(playerController, pos);
+
+                break;
+            }
+
+            case PacketTeleportNetworkedObject packet:
+            {
+                NetworkObject netObject =
+                    NetworkManager.Singleton.SpawnManager.SpawnedObjects[packet.NetworkObjectId];
+                Vector3 pos = packet.Position;
+
+                ClientHelper.TeleportNetworkObject(netObject, pos);
+
+                break;
+            }
+
+            case PacketEscapeFactoryStartEvent:
+            {
+                if (GameState.CurrentGameEvent?.GameEventType == GameEventType.EscapeFactory)
+                {
+                    EscapeFactoryEvent.StartEvent();
                 }
 
                 break;

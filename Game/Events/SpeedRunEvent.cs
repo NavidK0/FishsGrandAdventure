@@ -6,7 +6,8 @@ namespace FishsGrandAdventure.Game.Events;
 
 public class SpeedRunEvent : BaseGameEvent
 {
-    public override string Description => "It's Speedrunning Time!";
+    public override string Name => "Speed Run";
+    public override string Description => "It's speedrunning time!";
     public override Color Color => new Color(0.78f, 1f, 0f);
     public override GameEventType GameEventType => GameEventType.SpeedRun;
 

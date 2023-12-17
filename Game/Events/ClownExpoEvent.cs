@@ -32,6 +32,7 @@ public class ClownExpoEvent : BaseGameEvent
         "Baguette!",
     };
 
+    public override string Name => "Clown Expo";
     public override string Description => $"Welcome to Clown Expo {DateTime.Today.Year}!";
     public override Color Color => new Color32(252, 10, 0, 255);
     public override GameEventType GameEventType => GameEventType.ClownExpo;

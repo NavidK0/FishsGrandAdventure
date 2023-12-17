@@ -4,7 +4,8 @@ namespace FishsGrandAdventure.Game.Events;
 
 public class DeliveryEvent : BaseGameEvent
 {
-    public override string Description => "Extra Delivery!";
+    public override string Name => "Extra Delivery";
+    public override string Description => "This one's on the house!";
     public override Color Color => Color.green;
     public override GameEventType GameEventType => GameEventType.Delivery;
 

@@ -8,7 +8,8 @@ namespace FishsGrandAdventure.Game.Events;
 
 public class WendigoEvent : BaseGameEvent
 {
-    public override string Description => "The Wendigo";
+    public override string Name => "The Wendigo";
+    public override string Description => "...guys?";
     public override Color Color => new Color(0.2f, 0.07f, 0.09f);
     public override GameEventType GameEventType => GameEventType.Wendigo;
 

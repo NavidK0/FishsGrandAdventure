@@ -38,7 +38,7 @@ public class PlayerEffectBlazed : Effect
             }
         }
 
-        AudioManager.StopMusic();
+        AudioManager.MusicSource.Stop();
     }
 
     private void LateUpdate()

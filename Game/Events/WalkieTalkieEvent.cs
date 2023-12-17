@@ -4,6 +4,7 @@ namespace FishsGrandAdventure.Game.Events;
 
 public class WalkieTalkieEvent : BaseGameEvent
 {
+    public override string Name => "Walkie Talkies";
     public override string Description => "Communication is Key!";
     public override Color Color => new Color(0.5f, 0.5f, 0.5f);
     public override GameEventType GameEventType => GameEventType.WalkieTalkies;

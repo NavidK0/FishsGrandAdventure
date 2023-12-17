@@ -9,6 +9,7 @@ namespace FishsGrandAdventure.Game.Events;
 
 public class SeaWorldEvent : BaseGameEvent
 {
+    public override string Name => "Sea World";
     public override string Description => "Welcome to Sea World! Enjoy your souvenirs!";
     public override Color Color => Color.cyan;
     public override GameEventType GameEventType => GameEventType.SeaWorld;
@@ -46,7 +47,7 @@ public class SeaWorldEvent : BaseGameEvent
 
     public override void Cleanup()
     {
-        AudioManager.StopMusic();
+        AudioManager.MusicSource.Stop();
     }
 }
 
@@ -75,7 +76,7 @@ public static class PatchSeaWorld
     private static void PlayerControllerBUpdate(PlayerControllerB __instance)
     {
         if (GameState.CurrentGameEvent?.GameEventType != GameEventType.SeaWorld) return;
-        if (!__instance.IsLocalPlayer) return;
+        if (__instance.playerClientId != StartOfRound.Instance.localPlayerController.playerClientId) return;
 
         float drunkValue = Mathf.Abs(StartOfRound.Instance.drunknessSpeedEffect.Evaluate(__instance.drunkness) - 1.25f);
 
@@ -97,7 +98,7 @@ public static class PatchSeaWorld
                 }
             }
 
-            if (TimeSpentUnderwater > 3f)
+            if (TimeSpentUnderwater > 2f)
             {
                 __instance.isMovementHindered = 0;
                 HUDManager.Instance.underwaterScreenFilter.weight = .05f;
@@ -106,6 +107,11 @@ public static class PatchSeaWorld
             }
 
             TimeSpentUnderwater += Time.deltaTime;
+
+            if (TimeSpentUnderwater > 2f)
+            {
+                TimeSpentUnderwater = 2f;
+            }
         }
         else
         {

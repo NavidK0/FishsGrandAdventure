@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using FishsGrandAdventure.Behaviors;
 using GameNetcodeStuff;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace FishsGrandAdventure.Game;
@@ -77,5 +78,36 @@ public static class ClientHelper
                 GameNetworkManager.Instance.localPlayerController.movementSpeed = GameEventManager.DefaultMovementSpeed;
             }
         }
+    }
+
+    public static void TeleportPlayerIntoFactory(PlayerControllerB playerController, Vector3 pos)
+    {
+        if (Object.FindObjectOfType<AudioReverbPresets>())
+        {
+            Object.FindObjectOfType<AudioReverbPresets>().audioPresets[2].ChangeAudioReverbForPlayer(playerController);
+        }
+
+        playerController.DropAllHeldItems();
+
+        playerController.isInElevator = false;
+        playerController.isInHangarShipRoom = false;
+        playerController.isInsideFactory = true;
+        playerController.averageVelocity = 0f;
+        playerController.velocityLastFrame = Vector3.zero;
+
+        playerController.TeleportPlayer(pos);
+        playerController.SyncBodyPositionWithClients();
+
+        playerController.beamOutParticle.Play();
+
+        if (playerController.playerClientId == StartOfRound.Instance.localPlayerController.playerClientId)
+        {
+            HUDManager.Instance.ShakeCamera(ScreenShakeType.Big);
+        }
+    }
+
+    public static void TeleportNetworkObject(NetworkObject networkedObject, Vector3 position)
+    {
+        networkedObject.transform.position = position;
     }
 }
