@@ -86,9 +86,14 @@ public class RackAndRollEvent : BaseGameEvent
         );
     }
 
-    public override void Cleanup()
+    public override void CleanupServer()
     {
-        Terminal.buyableItemsList = OriginalBuyableItems;
+        if (OriginalBuyableItems != null)
+        {
+            Terminal.buyableItemsList = OriginalBuyableItems;
+        }
+
+        OriginalBuyableItems = null;
     }
 }
 
@@ -102,7 +107,10 @@ internal class PatchRackAndRoll
     {
         if (GameState.CurrentGameEvent?.GameEventType != GameEventType.RackAndRoll) return;
 
-        RackAndRollEvent.Terminal.buyableItemsList = RackAndRollEvent.OriginalBuyableItems;
+        if (RackAndRollEvent.OriginalBuyableItems != null)
+        {
+            RackAndRollEvent.Terminal.buyableItemsList = RackAndRollEvent.OriginalBuyableItems;
+        }
     }
 
     [HarmonyPatch(typeof(PlayerControllerB), "GrabObjectServerRpc")]

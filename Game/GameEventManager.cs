@@ -319,6 +319,11 @@ public class GameEventManager : MonoBehaviour
 
     private static void ResetEvents()
     {
+        if (GameState.CurrentGameEvent != null)
+        {
+            GameState.CurrentGameEvent.CleanupClient();
+        }
+
         if (!RoundManager.Instance.IsServer || !initialized) return;
 
         NetworkUtils.BroadcastAll(new PacketResetPlayerSpeed());
@@ -326,7 +331,7 @@ public class GameEventManager : MonoBehaviour
 
         if (GameState.CurrentGameEvent != null)
         {
-            GameState.CurrentGameEvent.Cleanup();
+            GameState.CurrentGameEvent.CleanupServer();
             GameState.CurrentGameEvent = null;
         }
 

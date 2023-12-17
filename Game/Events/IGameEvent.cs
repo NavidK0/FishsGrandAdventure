@@ -74,9 +74,16 @@ public abstract class BaseGameEvent
 
     /**
      * This is called when the event is being cleaned up.
-     * Client-side and server-side.
      */
-    public virtual void Cleanup()
+    public virtual void CleanupServer()
+    {
+    }
+
+    /**
+  * This is called when the event is being cleaned up.
+  * Client-side and server-side.
+  */
+    public virtual void CleanupClient()
     {
     }
 }

@@ -21,7 +21,7 @@ public static class CopyUtils
         level.OffsetFromGlobalTime = original.OffsetFromGlobalTime;
         level.DaySpeedMultiplier = original.DaySpeedMultiplier;
         level.planetHasTime = original.planetHasTime;
-        level.randomWeathers = original.randomWeathers.DeepCopy();
+        level.randomWeathers = original.randomWeathers;
         level.overrideWeather = original.overrideWeather;
         level.overrideWeatherType = original.overrideWeatherType;
 

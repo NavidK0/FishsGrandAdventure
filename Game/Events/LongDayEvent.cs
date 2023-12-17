@@ -18,7 +18,7 @@ public class LongDayEvent : BaseGameEvent
         });
     }
 
-    public override void Cleanup()
+    public override void CleanupServer()
     {
         NetworkUtils.BroadcastAll(new PacketGlobalTimeSpeedMultiplier
         {

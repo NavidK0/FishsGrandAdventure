@@ -45,7 +45,7 @@ public class SeaWorldEvent : BaseGameEvent
         TimeOfDay.Instance.currentWeatherVariable2 += 12;
     }
 
-    public override void Cleanup()
+    public override void CleanupClient()
     {
         AudioManager.MusicSource.Stop();
     }

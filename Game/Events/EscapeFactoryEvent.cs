@@ -29,10 +29,9 @@ public class EscapeFactoryEvent : BaseGameEvent
 
     private static float timeLeft;
     private static Item flashlightItem;
-    private static bool playedWinLossMusic;
+    private static bool clientWinLossCondition;
     private static CoroutineHandle earthquakeShakeCoroutine;
     private static CoroutineHandle setDayTimerCoroutine;
-    private static CoroutineHandle stopMusicCoroutine;
 
     public override string Name => "The Great Factory Escape";
     public override string Description => "Oh SHIT, THE FACTORY IS COLLAPSING! GET OUT NOW!";
@@ -47,8 +46,10 @@ public class EscapeFactoryEvent : BaseGameEvent
 
     public override void OnPreGenerateLevel(int randomSeed, int levelID)
     {
-        SelectableLevel currentLevel = StartOfRound.Instance.levels[levelID];
-        currentLevel.factorySizeMultiplier = 3.525f;
+        Plugin.Log.LogInfo($"Changing factory size for event... level id {levelID}");
+
+        SelectableLevel currentLevel = StartOfRound.Instance.levels.Find(level => level.levelID == levelID);
+        currentLevel.factorySizeMultiplier = 2.35f;
     }
 
     public override void OnPreRoundStart()
@@ -96,7 +97,7 @@ public class EscapeFactoryEvent : BaseGameEvent
             }
         }
 
-        CommandListener.SendChatMessage("<color=red>THE FACTORY IS COLLAPSING, GET OUT NOW!!! </color>");
+        CommandListener.SendChatMessage("<color=red>THE FACTORY IS COLLAPSING, GET OUT NOW!!!</color>");
         GracePeriodEndTime = (float)Time.timeAsDouble + InvincibilityGracePeriod + 1f;
 
         Timing.CallDelayed(.25f, () =>
@@ -114,10 +115,10 @@ public class EscapeFactoryEvent : BaseGameEvent
         });
     }
 
-    public override void Cleanup()
+    public override void CleanupClient()
     {
         AudioManager.MusicSource.Stop();
-        playedWinLossMusic = false;
+        clientWinLossCondition = false;
 
         ShipTeleporter[] shipTeleporters = Object.FindObjectsOfType<ShipTeleporter>(true);
         foreach (ShipTeleporter shipTeleporter in shipTeleporters)
@@ -127,7 +128,6 @@ public class EscapeFactoryEvent : BaseGameEvent
 
         Timing.KillCoroutines(earthquakeShakeCoroutine);
         Timing.KillCoroutines(setDayTimerCoroutine);
-        Timing.KillCoroutines(stopMusicCoroutine);
     }
 
     public static void StartEvent()
@@ -140,15 +140,6 @@ public class EscapeFactoryEvent : BaseGameEvent
             Volume = .5f
         });
 
-        stopMusicCoroutine = Timing.CallDelayed(MaxTime - 10f, () =>
-        {
-            NetworkUtils.BroadcastAll(new PacketStopMusic
-            {
-                FadeOut = true,
-                FadeOutDuration = 2f
-            });
-        });
-
         earthquakeShakeCoroutine =
             Timing.CallPeriodically(MaxTime, 10, () =>
             {
@@ -156,89 +147,105 @@ public class EscapeFactoryEvent : BaseGameEvent
                 AudioManager.PlaySFX("earthquake_rumble", .7f);
             });
 
-        setDayTimerCoroutine =
-            Timing.CallContinuously(MaxTime, () =>
+        setDayTimerCoroutine = Timing.RunCoroutine(LateUpdate(), Segment.LateUpdate);
+    }
+
+    private static IEnumerator<float> LateUpdate()
+    {
+        while (GameState.CurrentGameEvent?.GameEventType == GameEventType.EscapeFactory)
+        {
+            var time = TimeSpan.FromSeconds(timeLeft);
+
+            HUDManager.Instance.clockNumber.text = $"{time:mm\\:ss} LEFT";
+            HUDManager.Instance.SetClockIcon(DayMode.Midnight);
+            HUDManager.Instance.SetClockVisible(true);
+
+            float deltaTime = Timing.DeltaTime;
+
+            if (timeLeft >= 0f)
+            {
+                timeLeft -= deltaTime;
+            }
+            else
+            {
+                timeLeft = 0f;
+            }
+
+            if (StartOfRound.Instance.localPlayerController.isPlayerDead && clientWinLossCondition)
+            {
+                AudioManager.StopMusic();
+                AudioManager.PlaySFX("smk_game_over", .75f);
+
+                Timing.KillCoroutines(earthquakeShakeCoroutine);
+
+                clientWinLossCondition = true;
+            }
+
+            if (!StartOfRound.Instance.localPlayerController.isInsideFactory && clientWinLossCondition)
+            {
+                AudioManager.StopMusic();
+                AudioManager.PlaySFX("smk_win", .75f);
+
+                Timing.KillCoroutines(earthquakeShakeCoroutine);
+
+                clientWinLossCondition = true;
+            }
+
+            if (RoundManager.Instance.IsServer)
+            {
+                var playersInFactory = false;
+                var playerStillAlive = false;
+
+                for (var i = 0; i < GameNetworkManager.Instance.connectedPlayers; i++)
                 {
-                    var time = TimeSpan.FromSeconds(timeLeft);
+                    PlayerControllerB pc = StartOfRound.Instance.allPlayerScripts[i];
 
-                    HUDManager.Instance.clockNumber.text = $"{time:mm\\:ss} LEFT";
-                    HUDManager.Instance.SetClockIcon(DayMode.Midnight);
-                    HUDManager.Instance.SetClockVisible(true);
-
-                    float deltaTime = Timing.DeltaTime;
-                    timeLeft -= deltaTime;
-
-                    if (StartOfRound.Instance.localPlayerController.isPlayerDead &&
-                        AudioManager.MusicSource.isPlaying &&
-                        playedWinLossMusic
-                       )
+                    if (pc.isInsideFactory)
                     {
-                        AudioManager.MusicSource.Stop();
-                        AudioManager.PlaySFX("mk64_lost", .75f);
-                        playedWinLossMusic = true;
+                        playersInFactory = true;
                     }
 
-                    if (!StartOfRound.Instance.localPlayerController.isInsideFactory &&
-                        playedWinLossMusic)
+                    if (!pc.isPlayerDead)
                     {
-                        AudioManager.PlaySFX("smk_win", .75f);
-                        playedWinLossMusic = true;
+                        playerStillAlive = true;
                     }
+                }
 
-                    var playersInFactory = false;
-                    var playerStillAlive = false;
+                if (!playersInFactory || !playerStillAlive || timeLeft <= 0f)
+                {
+                    NetworkUtils.BroadcastAll(new PacketStopMusic
+                    {
+                        FadeOut = true
+                    });
 
                     for (var i = 0; i < GameNetworkManager.Instance.connectedPlayers; i++)
                     {
-                        PlayerControllerB playerController = StartOfRound.Instance.allPlayerScripts[i];
+                        PlayerControllerB pc = StartOfRound.Instance.allPlayerScripts[i];
 
-                        if (playerController.isInsideFactory)
+                        if (pc.isInsideFactory)
                         {
-                            playersInFactory = true;
-                        }
-
-                        if (!playerController.isPlayerDead)
-                        {
-                            playerStillAlive = true;
+                            NetworkUtils.BroadcastAll(new PacketSpawnExplosion
+                            {
+                                Position = pc.transform.position,
+                            });
                         }
                     }
 
-                    if (!playersInFactory || !playerStillAlive)
+                    if (RoundManager.Instance.IsServer)
                     {
-                        if (RoundManager.Instance.IsServer)
-                        {
-                            Timing.RunCoroutine(FinishUp());
-                        }
-
-                        Timing.KillCoroutines(setDayTimerCoroutine);
-                        Timing.KillCoroutines(earthquakeShakeCoroutine);
-                    }
-                },
-                Segment.LateUpdate,
-                () =>
-                {
-                    PlayerControllerB playerController = StartOfRound.Instance.localPlayerController;
-
-                    if (!playerController.isPlayerDead) return;
-
-                    if (playerController.isInsideFactory)
-                    {
-                        NetworkUtils.BroadcastAll(new PacketSpawnExplosion
-                        {
-                            Position = playerController.transform.position
-                        });
+                        Timing.RunCoroutine(FinishUp());
                     }
 
-                    Timing.CallDelayed(1f, () =>
-                    {
-                        if (RoundManager.Instance.IsServer)
-                        {
-                            Timing.RunCoroutine(FinishUp());
-                        }
+                    yield break;
+                }
+            }
+            else if (clientWinLossCondition)
+            {
+                yield break;
+            }
 
-                        Timing.KillCoroutines(earthquakeShakeCoroutine);
-                    });
-                });
+            yield return 0f;
+        }
     }
 
     private static IEnumerator<float> FinishUp()
@@ -248,7 +255,7 @@ public class EscapeFactoryEvent : BaseGameEvent
             FadeOut = true
         });
 
-        yield return Timing.WaitForSeconds(2f);
+        yield return Timing.WaitForSeconds(3f);
 
         var playerStillAlive = false;
         var allPlayersAlive = true;
@@ -279,6 +286,8 @@ public class EscapeFactoryEvent : BaseGameEvent
                 Name = "crowd_cheering",
                 Volume = .75f
             });
+
+            HUDManager.Instance.AddTextToChatOnServer("You all escaped! Amazing!");
         }
         else if (playerStillAlive)
         {
@@ -287,14 +296,18 @@ public class EscapeFactoryEvent : BaseGameEvent
                 Name = "mk64_finish",
                 Volume = .75f
             });
+
+            HUDManager.Instance.AddTextToChatOnServer("Some of you escaped!");
         }
         else
         {
             NetworkUtils.BroadcastAll(new PacketPlaySFX
             {
-                Name = "smk_game_over",
+                Name = "mk64_lost",
                 Volume = .75f
             });
+
+            HUDManager.Instance.AddTextToChatOnServer("Everyone died...");
         }
     }
 
@@ -323,8 +336,6 @@ public class EscapeFactoryEvent : BaseGameEvent
 
         FlashlightItem grabbable = go.GetComponent<FlashlightItem>();
         grabbable.fallTime = 0f;
-        grabbable.flashlightBulb.range *= 2f;
-        grabbable.SetScrapValue(150);
 
         NetworkObject gunNetObject = go.GetComponent<NetworkObject>();
         gunNetObject.Spawn();

@@ -32,7 +32,7 @@ public class ClownWorldEvent : BaseGameEvent
         }
     }
 
-    public override void Cleanup()
+    public override void CleanupClient()
     {
         PatchClownWorld.Clownified = false;
 

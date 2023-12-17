@@ -27,7 +27,7 @@ public class SpeedRunEvent : BaseGameEvent
         });
     }
 
-    public override void Cleanup()
+    public override void CleanupServer()
     {
         NetworkUtils.BroadcastAll(new PacketGlobalTimeSpeedMultiplier
         {
