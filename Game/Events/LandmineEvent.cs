@@ -13,10 +13,10 @@ public class LandmineEvent : BaseGameEvent
     {
         foreach (SpawnableMapObject spawnableMapObject in level.spawnableMapObjects)
         {
-            if (spawnableMapObject.prefabToSpawn.GetComponentInChildren<Turret>() != null)
+            if (spawnableMapObject.prefabToSpawn.GetComponentInChildren<Landmine>() != null)
             {
                 spawnableMapObject.numberToSpawn =
-                    new AnimationCurve(new Keyframe(0f, 200f), new Keyframe(1f, 25f));
+                    new AnimationCurve(new Keyframe(0f, 175f), new Keyframe(1f, 150f));
             }
         }
     }
