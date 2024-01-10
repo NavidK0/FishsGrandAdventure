@@ -200,7 +200,7 @@ public class EscapeFactoryEvent : BaseGameEvent
                 {
                     PlayerControllerB pc = StartOfRound.Instance.allPlayerScripts[i];
 
-                    if (pc.isInsideFactory)
+                    if (pc.isInsideFactory && !pc.isPlayerDead)
                     {
                         playersInFactory = true;
                     }
@@ -337,8 +337,8 @@ public class EscapeFactoryEvent : BaseGameEvent
         FlashlightItem grabbable = go.GetComponent<FlashlightItem>();
         grabbable.fallTime = 0f;
 
-        NetworkObject gunNetObject = go.GetComponent<NetworkObject>();
-        gunNetObject.Spawn();
+        NetworkObject netObject = go.GetComponent<NetworkObject>();
+        netObject.Spawn();
     }
 
     public static void SendToShip(
@@ -361,7 +361,7 @@ public class EscapeFactoryEvent : BaseGameEvent
 
             int slotIndex =
                 playerController.ItemSlots.FindIndex(
-                    slot => slot.NetworkObjectId == grabbableObject.NetworkObjectId
+                    slot => slot == grabbableObject
                 );
 
             playerController.SetSpecialGrabAnimationBool(false, grabbableObject);

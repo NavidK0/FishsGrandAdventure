@@ -4,7 +4,7 @@
         <TargetFramework>net46</TargetFramework>
         <AssemblyName>FishsGrandAdventure</AssemblyName>
         <Authors>Fish Clan</Authors>
-        <Description>Private mod for the Fish Clan.</Description>
+        <Description>Private mod for the Fish Clan</Description>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <LangVersion>default</LangVersion>
         <Nullable>disable</Nullable>

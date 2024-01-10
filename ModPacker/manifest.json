@@ -1,9 +1,8 @@
 {
-  "name": "Fish's Grand Adventure",
+  "name": "FishsGrandAdventure",
   "author": "NavidK0",
-  "version_number": "1.2.2",
-  "description": "Private mod for the Fish Clan. Adds a bunch of \"special\" content to the game.",
-  "dependencies": [
-    "steven4547466-YoutubeBoombox-1.4.1"
-  ]
+  "website_url": "",
+  "version_number": "1.2.3",
+  "description": "Private mod for the Fish Clan.",
+  "dependencies": []
 }

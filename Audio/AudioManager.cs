@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System.Runtime.CompilerServices;
 using FishsGrandAdventure.Utils;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.SceneManagement;
 
 namespace FishsGrandAdventure.Audio;
 
@@ -37,6 +37,14 @@ public class AudioManager : MonoBehaviour
         SFXSource.spatializePostEffects = false;
 
         Timing.RunCoroutine(LoadAudioResources());
+
+        SceneManager.activeSceneChanged += OnActiveSceneChanged;
+    }
+
+    private void OnActiveSceneChanged(Scene prev, Scene current)
+    {
+        MusicSource.Stop();
+        SFXSource.Stop();
     }
 
     public static void PlayMusic(string name, float volume = .85f, float pitch = 1f, bool loop = false)

@@ -9,7 +9,6 @@ using FishsGrandAdventure.Game.Events;
 using FishsGrandAdventure.Network;
 using HarmonyLib;
 using UnityEngine;
-using Debug = System.Diagnostics.Debug;
 using NetworkTransport = FishsGrandAdventure.Network.NetworkTransport;
 
 namespace FishsGrandAdventure;
@@ -18,11 +17,10 @@ public static class ModInfo
 {
     public const string Guid = "FishsGrandAdventure";
     public const string Name = "Fish's Grand Adventure";
-    public const string Version = "1.2.2";
+    public const string Version = "1.2.3";
 
-    public static string[] Dependencies => new[]
+    public static string[] Dependencies => new string[]
     {
-        "steven4547466-YoutubeBoombox-1.4.1"
     };
 }
 

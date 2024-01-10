@@ -9,10 +9,11 @@ var projectDir = $"{GetThisFilePath()}/..";
 
 var manifestObject = new
 {
-    name = ModInfo.Name,
+    name = ModInfo.Guid,
     author = "NavidK0",
+    website_url = "",
     version_number = ModInfo.Version,
-    description = "Private mod for the Fish Clan. Adds a bunch of \"special\" content to the game.",
+    description = "Private mod for the Fish Clan.",
     dependencies = ModInfo.Dependencies,
 };
 

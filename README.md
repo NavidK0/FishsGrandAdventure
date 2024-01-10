@@ -1,4 +1,4 @@
-﻿# What is this?
+# What is this?
 
 This mod adds a bunch of unique events into the game which randomly roll every time you go to a new moon.
 
