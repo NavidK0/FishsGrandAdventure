@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Reflection;
+﻿using System.Reflection;
 using BepInEx;
 using BepInEx.Logging;
 using FishsGrandAdventure.Audio;
@@ -17,7 +16,7 @@ public static class ModInfo
 {
     public const string Guid = "FishsGrandAdventure";
     public const string Name = "Fish's Grand Adventure";
-    public const string Version = "1.2.4";
+    public const string Version = "1.2.5";
 
     public static string[] Dependencies => new string[]
     {
