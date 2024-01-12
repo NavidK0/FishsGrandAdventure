@@ -46,7 +46,6 @@ public class GameEventManager : MonoBehaviour
         new ClownWorldEvent(),
         new ClownExpoEvent(),
         new RackAndRollEvent(),
-        new WendigoEvent(),
         new EscapeFactoryEvent()
     };
 

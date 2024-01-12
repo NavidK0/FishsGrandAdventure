@@ -2,7 +2,6 @@
 using BepInEx;
 using BepInEx.Logging;
 using FishsGrandAdventure.Audio;
-using FishsGrandAdventure.Behaviors.Wendigo;
 using FishsGrandAdventure.Game;
 using FishsGrandAdventure.Game.Events;
 using FishsGrandAdventure.Network;
@@ -16,7 +15,7 @@ public static class ModInfo
 {
     public const string Guid = "FishsGrandAdventure";
     public const string Name = "Fish's Grand Adventure";
-    public const string Version = "1.2.5";
+    public const string Version = "1.2.6";
 
     public static string[] Dependencies => new string[]
     {
@@ -80,12 +79,6 @@ public class Plugin : BaseUnityPlugin
             DontDestroyOnLoad(audioManagerGo);
 
             Log.LogInfo("Added AudioManager");
-
-            var wendigoGo = new GameObject("FishsGrandAdventure.WendigoRecorder");
-            wendigoGo.AddComponent<WendigoRecorder>();
-            DontDestroyOnLoad(wendigoGo);
-
-            Log.LogInfo("Added WendigoRecorder");
 
             loaded = true;
 
