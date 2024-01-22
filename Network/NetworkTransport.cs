@@ -1,4 +1,8 @@
-﻿using System;
+﻿/*
+ * Originally based on the chat-based NetworkTransport from LC-API.
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using FishsGrandAdventure.Utils;

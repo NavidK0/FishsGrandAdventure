@@ -8,10 +8,13 @@ Imagine Super Mario Wonder, but it's Lethal Company.
 This mod was originally based on Brutal Company by u-2018. I have since rewritten most of it and changed a lot of how it
 works.
 
+# Thunderstore.io Link
+
+https://thunderstore.io/c/lethal-company/p/NavidK0/FishsGrandAdventure/
+
 # Inspirations and Credits
 
-Brutal Company by u-2018 - https://thunderstore.io/c/lethal-company/p/2018/Brutal_Company/  
-Skinwalkers by RugbugRedfern - https://thunderstore.io/c/lethal-company/p/RugbugRedfern/Skinwalkers/
+Brutal Company by u-2018 - https://thunderstore.io/c/lethal-company/p/2018/Brutal_Company/
 
 # Prerequisites
 
@@ -36,7 +39,7 @@ Required mods should be loaded automatically by the manifest.
 ### Danger Level
 
 The original mod had a concept called "Heat" that it used to effect enemy spawn rates and such.  
-This has been changed to "Danger" and works somewhat differently.
+This has been changed to "Danger" and works a little differently.
 
 ### Custom Moons
 
@@ -51,7 +54,7 @@ This mod adds some custom levels. They are:
 
 #### None
 
-Nothing. Yes.
+Nothing.
 
 #### All Event
 
@@ -125,7 +128,7 @@ The day is twice as long, so basically 30 minutes. Good on some moons, bad on ot
 
 The day is very fast! Good on some moons, bad on others.
 
-### Unique Events - These are the super fun ones
+### Unique Events - These change up the game
 
 #### 420 Blaze It
 
@@ -155,6 +158,6 @@ We are of a higher class.
 
 They are rage, brutal, without mercy. But you, you will be worse. RIP AND TEAR UNTIL IT IS DONE!
 
-#### Wendigo
+#### The Great Factory Escape
 
-...fuck
+GET OUT, GET OUT NOW
