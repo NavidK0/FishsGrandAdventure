@@ -8,6 +8,9 @@ Imagine Super Mario Wonder, but it's Lethal Company.
 This mod was originally based on Brutal Company by u-2018. I have since rewritten most of it and changed a lot of how it
 works.
 
+# Thunderstore.io Link
+https://thunderstore.io/c/lethal-company/p/NavidK0/FishsGrandAdventure/
+
 # Inspirations and Credits
 
 Brutal Company by u-2018 - https://thunderstore.io/c/lethal-company/p/2018/Brutal_Company/  
@@ -155,6 +158,6 @@ We are of a higher class.
 
 They are rage, brutal, without mercy. But you, you will be worse. RIP AND TEAR UNTIL IT IS DONE!
 
-#### Wendigo
+#### The Great Factory Escape
 
-...fuck
+GET OUT, GET OUT NOW

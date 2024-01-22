@@ -72,11 +72,6 @@ public class EscapeFactoryEvent : BaseGameEvent
             doorLock.UnlockDoor();
         }
 
-        foreach (DoorLock doorLock in Object.FindObjectsOfType<DoorLock>(true))
-        {
-            doorLock.UnlockDoor();
-        }
-
         foreach (TerminalAccessibleObject tao in Object.FindObjectsOfType<TerminalAccessibleObject>(true))
         {
             tao.SetDoorOpen(true);
